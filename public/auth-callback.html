@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signing you in — AgroVista Monthly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <a class="navbar-brand" href="index.html">
+      <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+      <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+    </a>
+    <div class="auth-icon" id="auth-icon"><i class="bi bi-arrow-repeat"></i></div>
+    <h3 class="mb-2" id="auth-heading">Signing you in…</h3>
+    <p class="mb-0" id="auth-message">Just a moment.</p>
+    <div class="mt-4 d-none" id="auth-actions">
+      <a href="login.html" class="btn custom-btn">Request a New Link</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function () {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('token');
+  var redirect = params.get('redirect') || 'index.html';
+
+  var heading = document.getElementById('auth-heading');
+  var message = document.getElementById('auth-message');
+  var icon = document.getElementById('auth-icon');
+  var actions = document.getElementById('auth-actions');
+
+  if (!token) {
+    heading.textContent = 'Missing sign-in link';
+    message.textContent = 'This page needs a valid token from your email link.';
+    actions.classList.remove('d-none');
+    return;
+  }
+
+  try {
+    var res = await fetch('/api/auth/verify?token=' + encodeURIComponent(token), { credentials: 'include' });
+    var data = await res.json();
+
+    if (!res.ok) {
+      icon.innerHTML = '<i class="bi bi-x-circle"></i>';
+      heading.textContent = 'Link expired or already used';
+      message.textContent = data.message || 'Please request a new sign-in link.';
+      actions.classList.remove('d-none');
+      return;
+    }
+
+    icon.innerHTML = '<i class="bi bi-check-circle"></i>';
+    heading.textContent = 'You\'re signed in!';
+    message.textContent = 'Redirecting…';
+    setTimeout(function () {
+      window.location.href = redirect;
+    }, 700);
+  } catch (err) {
+    icon.innerHTML = '<i class="bi bi-x-circle"></i>';
+    heading.textContent = 'Something went wrong';
+    message.textContent = 'Please try signing in again.';
+    actions.classList.remove('d-none');
+  }
+})();
+</script>
+</body>
+</html>

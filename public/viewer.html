@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title id="page-title">Reading — AgroVista Monthly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+<style>
+  /* Hide the whole reader from print output — printing is one of the few
+     things a browser can do to a page that we can meaningfully block. */
+  @media print {
+    body::before {
+      content: "Printing is disabled for AgroVista Monthly issues.";
+      display: block;
+      padding: 100px;
+      text-align: center;
+      font-size: 22px;
+    }
+    .viewer-shell { display: none !important; }
+  }
+</style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="viewer-shell">
+  <div class="viewer-topbar">
+    <div class="d-flex align-items-center gap-3">
+      <a href="index.html" class="d-flex align-items-center" style="gap:8px;">
+        <span class="navbar-brand-mark" style="width:32px;height:32px;font-size:15px;"><i class="bi bi-flower1"></i></span>
+      </a>
+      <span class="viewer-title" id="viewer-title">Loading…</span>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span class="small text-white-50 d-none d-md-inline" id="viewer-email"></span>
+      <a href="#" id="back-to-issue-link" class="small"><i class="bi bi-arrow-left me-1"></i>Back to issue</a>
+    </div>
+  </div>
+
+  <div class="viewer-body" id="viewer-body">
+    <div class="viewer-loading" id="viewer-loading">
+      <i class="bi bi-arrow-repeat" style="font-size:32px;"></i>
+      <p class="mt-3">Preparing your issue…</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/bootstrap.bundle.min.js"></script>
+<script>
+(async function () {
+  var params = new URLSearchParams(window.location.search);
+  var issueId = params.get('id');
+  var body = document.getElementById('viewer-body');
+  var loadingEl = document.getElementById('viewer-loading');
+
+  document.getElementById('back-to-issue-link').href = issueId ? ('issue.html?id=' + encodeURIComponent(issueId)) : 'archive.html';
+
+  function showBlocked(iconClass, heading, text, ctaHtml) {
+    body.innerHTML =
+      '<div class="viewer-blocked">' +
+        '<i class="bi ' + iconClass + '"></i>' +
+        '<h3 class="mt-3" style="color:#fff;">' + heading + '</h3>' +
+        '<p style="color:rgba(255,255,255,0.6);">' + text + '</p>' +
+        (ctaHtml || '') +
+      '</div>';
+  }
+
+  if (!issueId) {
+    showBlocked('bi-journal-x', 'No issue specified', 'Go back to the archive and pick an issue to read.',
+      '<a href="archive.html" class="btn custom-btn">Browse Archive</a>');
+    return;
+  }
+
+  // Who is logged in?
+  var session = await fetch('/api/auth/me', { credentials: 'include' }).then(function (r) { return r.json(); });
+  if (!session.authenticated) {
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+    return;
+  }
+  document.getElementById('viewer-email').textContent = session.email;
+
+  // Fetch page count (also enforces the purchase check server-side).
+  var metaRes = await fetch('/api/viewer/' + encodeURIComponent(issueId) + '/meta', { credentials: 'include' });
+
+  if (metaRes.status === 402) {
+    showBlocked('bi-lock', 'This issue is locked', 'You need to purchase this issue before you can read it.',
+      '<a href="issue.html?id=' + encodeURIComponent(issueId) + '" class="btn custom-btn">Unlock This Issue</a>');
+    return;
+  }
+  if (metaRes.status === 401) {
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+    return;
+  }
+  if (!metaRes.ok) {
+    showBlocked('bi-exclamation-triangle', 'Could not open this issue', 'Please try again in a moment.',
+      '<a href="archive.html" class="btn custom-btn">Back to Archive</a>');
+    return;
+  }
+
+  var meta = await metaRes.json();
+  document.getElementById('viewer-title').textContent = meta.title;
+  document.getElementById('page-title').textContent = meta.title + ' — AgroVista Monthly';
+
+  loadingEl.remove();
+
+  for (var p = 1; p <= meta.pageCount; p++) {
+    var wrap = document.createElement('div');
+    wrap.className = 'viewer-page-wrap';
+    var img = document.createElement('img');
+    img.src = '/api/viewer/' + encodeURIComponent(issueId) + '/page/' + p;
+    img.alt = meta.title + ' — page ' + p;
+    img.loading = p <= 2 ? 'eager' : 'lazy';
+    img.draggable = false;
+    wrap.appendChild(img);
+    var pageLabel = document.createElement('div');
+    pageLabel.className = 'viewer-page-number';
+    pageLabel.textContent = 'Page ' + p + ' of ' + meta.pageCount;
+    wrap.appendChild(pageLabel);
+    body.appendChild(wrap);
+  }
+
+  var progress = document.createElement('div');
+  progress.className = 'viewer-progress';
+  progress.textContent = 'End of issue — thanks for reading!';
+  body.appendChild(progress);
+
+  // ---- Best-effort deterrents against saving/printing/inspecting ----
+  // None of this can make on-screen content literally impossible to copy
+  // (a photo of the screen always works), but it removes the easy paths
+  // and every page image is already watermarked with this reader's email
+  // server-side, so a leaked copy is traceable.
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('dragstart', function (e) { e.preventDefault(); });
+  document.addEventListener('keydown', function (e) {
+    var k = e.key ? e.key.toLowerCase() : '';
+    var blockCombo =
+      (e.ctrlKey || e.metaKey) && ['s', 'p', 'u'].indexOf(k) !== -1 ||
+      (e.ctrlKey && e.shiftKey && k === 'i') ||
+      k === 'f12';
+    if (blockCombo) e.preventDefault();
+  });
+})();
+</script>
+</body>
+</html>

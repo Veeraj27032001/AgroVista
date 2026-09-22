@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — AgroVista Monthly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <a class="navbar-brand" href="index.html">
+      <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+      <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+    </a>
+
+    <div id="request-form-wrap">
+      <div class="auth-icon"><i class="bi bi-envelope-paper"></i></div>
+      <h3 class="mb-2">Sign in to read your issues</h3>
+      <p class="mb-4">Enter your email and we'll send you a one-click sign-in link. No password needed.</p>
+      <form id="login-form">
+        <input type="email" id="email-input" class="form-control form-control-lg mb-3" placeholder="you@example.com" required style="border-radius:12px;">
+        <button type="submit" class="btn custom-btn w-100" id="login-submit-btn">Send Sign-In Link</button>
+      </form>
+      <div class="auth-status" id="auth-status"></div>
+    </div>
+
+    <div id="sent-wrap" class="d-none">
+      <div class="auth-icon"><i class="bi bi-check-circle"></i></div>
+      <h3 class="mb-2">Check your email</h3>
+      <p class="mb-0">We sent a sign-in link to <strong id="sent-email"></strong>. Click it to continue — it expires in 15 minutes.</p>
+      <p class="mt-3 small text-muted">Didn't get it? Check spam, or <a href="#" id="try-again-link">try a different email</a>.</p>
+      <div id="dev-link-box" class="d-none mt-3 p-3" style="background:#f6f2e7;border-radius:10px;text-align:left;font-size:13px;">
+        <strong>Dev mode</strong> — no SMTP is configured yet, so here's the link directly:<br>
+        <a id="dev-link" href="#" style="word-break:break-all;"></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/bootstrap.bundle.min.js"></script>
+<script>
+var params = new URLSearchParams(window.location.search);
+var redirect = params.get('redirect') || 'index.html';
+
+var form = document.getElementById('login-form');
+var statusEl = document.getElementById('auth-status');
+
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  var email = document.getElementById('email-input').value.trim();
+  var btn = document.getElementById('login-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  statusEl.textContent = '';
+  statusEl.className = 'auth-status';
+
+  try {
+    var res = await fetch('/api/auth/request-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, redirect: redirect })
+    });
+    var data = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = data.message || 'Something went wrong. Please try again.';
+      statusEl.className = 'auth-status error';
+      btn.disabled = false;
+      btn.textContent = 'Send Sign-In Link';
+      return;
+    }
+
+    document.getElementById('sent-email').textContent = email;
+    document.getElementById('request-form-wrap').classList.add('d-none');
+    document.getElementById('sent-wrap').classList.remove('d-none');
+
+    if (data.devLink) {
+      document.getElementById('dev-link-box').classList.remove('d-none');
+      var devLinkEl = document.getElementById('dev-link');
+      devLinkEl.href = data.devLink;
+      devLinkEl.textContent = data.devLink;
+    }
+  } catch (err) {
+    statusEl.textContent = 'Network error. Please try again.';
+    statusEl.className = 'auth-status error';
+    btn.disabled = false;
+    btn.textContent = 'Send Sign-In Link';
+  }
+});
+
+document.getElementById('try-again-link').addEventListener('click', function (e) {
+  e.preventDefault();
+  document.getElementById('sent-wrap').classList.add('d-none');
+  document.getElementById('request-form-wrap').classList.remove('d-none');
+  document.getElementById('login-submit-btn').disabled = false;
+  document.getElementById('login-submit-btn').textContent = 'Send Sign-In Link';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Browse and search every past issue of AgroVista Monthly by year, volume or issue number. Sign in and unlock any issue to read online.">
+    <title>Magazine Archive — AgroVista Monthly</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar navbar-expand-lg fixed-top scrolled">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">
+            <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+            <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-lg-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#categories">Categories</a></li>
+                <li class="nav-item"><a class="nav-link active" href="archive.html">Archive</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="ms-lg-3 mt-3 mt-lg-0 d-flex align-items-center gap-2" id="nav-auth-slot">
+                <a href="login.html" class="btn custom-btn custom-btn-secondary custom-btn-sm">Sign in</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ARCHIVE HERO -->
+<section class="archive-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="eyebrow" style="color:#E3A93A;">Magazine Archive</div>
+                <h1 class="mb-3">Every issue, easy to find</h1>
+                <p class="mb-0">Search by title, or filter by year, volume and issue number. Sign in once and unlock any issue for ₹49 — read online, forever accessible from your account.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <!-- SEARCH PANEL -->
+    <div class="search-panel">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-4 col-md-6 col-12">
+                <label class="form-label" for="search-input">Search by title or keyword</label>
+                <div class="search-input-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="search-input" class="form-control" placeholder="e.g. irrigation, drones, dairy…">
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6">
+                <label class="form-label" for="filter-year">Year</label>
+                <select id="filter-year" class="form-select">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6">
+                <label class="form-label" for="filter-volume">Volume</label>
+                <select id="filter-volume" class="form-select">
+                    <option value="">All Volumes</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6">
+                <label class="form-label" for="filter-issue">Issue No.</label>
+                <select id="filter-issue" class="form-select">
+                    <option value="">All Issues</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6">
+                <label class="form-label" for="filter-category">Category</label>
+                <select id="filter-category" class="form-select">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-3 border-top">
+            <span class="results-count" id="results-count">Showing all issues</span>
+            <button type="button" id="reset-filters" class="btn custom-btn custom-btn-secondary custom-btn-sm">
+                <i class="bi bi-x-circle me-1"></i> Clear Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- YEAR QUICK TABS -->
+    <div class="year-tabs" id="year-tabs">
+        <button type="button" class="year-tab active" data-year="">All Years</button>
+    </div>
+
+    <!-- RESULTS GRID -->
+    <section class="pb-5">
+        <div class="row g-4" id="issues-grid">
+            <div class="col-12 text-center text-muted py-5"><i class="bi bi-arrow-repeat"></i> Loading issues…</div>
+        </div>
+
+        <div class="no-results d-none" id="no-results">
+            <i class="bi bi-journal-x"></i>
+            <h5>No issues found</h5>
+            <p class="mb-0">Try a different keyword or clear your filters.</p>
+        </div>
+    </section>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-12 mb-5 mb-lg-0">
+                <a class="navbar-brand d-flex align-items-center mb-3" href="index.html">
+                    <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+                    <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+                </a>
+                <p>Independent monthly reporting on agriculture technology, markets, sustainability and people — unlock any issue for ₹49.</p>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h5 class="mb-4">Explore</h5>
+                <p><a href="index.html#about">About</a></p>
+                <p><a href="index.html#categories">Categories</a></p>
+                <p><a href="archive.html">Archive</a></p>
+                <p class="mb-0"><a href="index.html#contact">Contact</a></p>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h5 class="mb-4">Categories</h5>
+                <p><a href="archive.html?q=Technology">Technology</a></p>
+                <p><a href="archive.html?q=Markets">Markets</a></p>
+                <p><a href="archive.html?q=Sustainability">Sustainability</a></p>
+                <p class="mb-0"><a href="archive.html?q=Policy">Policy</a></p>
+            </div>
+            <div class="col-lg-3 col-12 ms-lg-auto">
+                <h5 class="mb-4">Your Account</h5>
+                <p>Sign in with your email to view purchased issues on any device.</p>
+                <a href="login.html" class="btn custom-btn custom-btn-sm">Sign In</a>
+            </div>
+        </div>
+        <div class="footer-bottom d-flex flex-wrap justify-content-between">
+            <p class="mb-0">Copyright © 2026 AgroVista Monthly. All rights reserved.</p>
+            <p class="mb-0">Built for the global agriculture community.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="js/site.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+    var ALL = await Agrovista.fetchIssues();
+
+    var grid = document.getElementById('issues-grid');
+    var noResults = document.getElementById('no-results');
+    var resultsCount = document.getElementById('results-count');
+    var searchInput = document.getElementById('search-input');
+    var yearSelect = document.getElementById('filter-year');
+    var volumeSelect = document.getElementById('filter-volume');
+    var issueSelect = document.getElementById('filter-issue');
+    var categorySelect = document.getElementById('filter-category');
+    var yearTabs = document.getElementById('year-tabs');
+
+    var years = Array.from(new Set(ALL.map(function(i){ return i.year; }))).sort(function(a,b){ return b-a; });
+    var volumes = Array.from(new Set(ALL.map(function(i){ return i.volume; }))).sort(function(a,b){ return a-b; });
+    var issueNums = Array.from(new Set(ALL.map(function(i){ return i.issueNumber; }))).sort(function(a,b){ return a-b; });
+    var categories = Array.from(new Set(ALL.map(function(i){ return i.category; }))).sort();
+
+    years.forEach(function(y){
+        var opt = document.createElement('option'); opt.value = y; opt.textContent = y;
+        yearSelect.appendChild(opt);
+        var tab = document.createElement('button');
+        tab.type = 'button'; tab.className = 'year-tab'; tab.dataset.year = y; tab.textContent = y;
+        yearTabs.appendChild(tab);
+    });
+    volumes.forEach(function(v){
+        var opt = document.createElement('option'); opt.value = v; opt.textContent = 'Volume ' + v;
+        volumeSelect.appendChild(opt);
+    });
+    issueNums.forEach(function(n){
+        var opt = document.createElement('option'); opt.value = n; opt.textContent = 'Issue ' + n;
+        issueSelect.appendChild(opt);
+    });
+    categories.forEach(function(c){
+        var opt = document.createElement('option'); opt.value = c; opt.textContent = c;
+        categorySelect.appendChild(opt);
+    });
+
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('q')) {
+        var q = params.get('q');
+        if (categories.indexOf(q) !== -1) { categorySelect.value = q; }
+        else { searchInput.value = q; }
+    }
+    if (params.get('year')) yearSelect.value = params.get('year');
+    if (params.get('volume')) volumeSelect.value = params.get('volume');
+
+    function cardHTML(issue) {
+        return (
+            '<div class="col-lg-3 col-md-6 col-12 issue-col">' +
+                '<div class="issue-card">' +
+                    '<div class="issue-card-cover">' +
+                        '<span class="issue-card-tag">' + issue.category + '</span>' +
+                        (!issue.purchased ? '<div class="lock-overlay"><i class="bi bi-lock-fill"></i></div>' : '') +
+                        '<a href="issue.html?id=' + issue.id + '"><img src="' + issue.cover + '" alt="' + issue.title + '"></a>' +
+                    '</div>' +
+                    '<div class="issue-card-body">' +
+                        '<div class="issue-card-meta">' + issue.month + ' ' + issue.year + ' · Vol ' + issue.volume + ', No ' + issue.issueNumber + '</div>' +
+                        '<h3 class="issue-card-title" style="font-size:16px;"><a href="issue.html?id=' + issue.id + '">' + issue.title + '</a></h3>' +
+                        '<div class="mt-2">' + Agrovista.purchaseCtaHTML(issue, { small: true }) + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>'
+        );
+    }
+
+    function applyFilters() {
+        var query = searchInput.value.trim().toLowerCase();
+        var year = yearSelect.value;
+        var volume = volumeSelect.value;
+        var issueNum = issueSelect.value;
+        var category = categorySelect.value;
+
+        var filtered = ALL.filter(function (issue) {
+            var matchesQuery = !query ||
+                issue.title.toLowerCase().indexOf(query) !== -1 ||
+                issue.summary.toLowerCase().indexOf(query) !== -1 ||
+                issue.category.toLowerCase().indexOf(query) !== -1 ||
+                issue.month.toLowerCase().indexOf(query) !== -1 ||
+                String(issue.year).indexOf(query) !== -1;
+            var matchesYear = !year || String(issue.year) === year;
+            var matchesVolume = !volume || String(issue.volume) === volume;
+            var matchesIssue = !issueNum || String(issue.issueNumber) === issueNum;
+            var matchesCategory = !category || issue.category === category;
+            return matchesQuery && matchesYear && matchesVolume && matchesIssue && matchesCategory;
+        });
+
+        grid.innerHTML = filtered.map(cardHTML).join('');
+        noResults.classList.toggle('d-none', filtered.length > 0);
+        resultsCount.textContent = filtered.length === ALL.length
+            ? 'Showing all ' + ALL.length + ' issues'
+            : 'Showing ' + filtered.length + ' of ' + ALL.length + ' issues';
+
+        Array.from(yearTabs.children).forEach(function (tab) {
+            tab.classList.toggle('active', tab.dataset.year === year);
+        });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    [yearSelect, volumeSelect, issueSelect, categorySelect].forEach(function (el) {
+        el.addEventListener('change', applyFilters);
+    });
+
+    yearTabs.addEventListener('click', function (e) {
+        var btn = e.target.closest('.year-tab');
+        if (!btn) return;
+        yearSelect.value = btn.dataset.year;
+        applyFilters();
+    });
+
+    document.getElementById('reset-filters').addEventListener('click', function () {
+        searchInput.value = '';
+        yearSelect.value = '';
+        volumeSelect.value = '';
+        issueSelect.value = '';
+        categorySelect.value = '';
+        applyFilters();
+    });
+
+    applyFilters();
+});
+</script>
+</body>
+</html>

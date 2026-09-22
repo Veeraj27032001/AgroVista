@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AgroVista Monthly is a paid monthly e-magazine covering technology, markets, sustainability and people shaping the agriculture industry. Sign in and unlock any issue to read online.">
+    <title>AgroVista Monthly — Agriculture Industry E-Magazine</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">
+            <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+            <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-lg-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#categories">Categories</a></li>
+                <li class="nav-item"><a class="nav-link" href="archive.html">Archive</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="ms-lg-3 mt-3 mt-lg-0 d-flex align-items-center gap-2" id="nav-auth-slot">
+                <a href="login.html" class="btn custom-btn custom-btn-secondary custom-btn-sm">Sign in</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-section">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-6 col-12 mb-5 mb-lg-0">
+                <span class="hero-badge"><i class="bi bi-calendar-event"></i> New issue every month</span>
+                <h1 class="mb-4">Stories &amp; data shaping the future of agriculture.</h1>
+                <p class="lead mb-4">AgroVista Monthly brings farmers, agronomists and agribusiness leaders in-depth reporting on technology, markets, sustainability and the people growing the world's food. Sign in with your email and unlock any issue to read online.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="#latest-issue" class="btn custom-btn">Read Current Issue</a>
+                    <a href="archive.html" class="btn custom-btn custom-btn-outline-light">Browse Archive</a>
+                </div>
+
+                <div class="hero-stats">
+                    <div>
+                        <span class="stat-num" id="stat-issues">—</span>
+                        <span class="stat-label">Issues Published</span>
+                    </div>
+                    <div>
+                        <span class="stat-num">3</span>
+                        <span class="stat-label">Volumes</span>
+                    </div>
+                    <div>
+                        <span class="stat-num">45K+</span>
+                        <span class="stat-label">Monthly Readers</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 col-12 mx-auto">
+                <div class="hero-cover-wrap">
+                    <span class="hero-cover-badge">Latest Issue</span>
+                    <div class="hero-cover-card">
+                        <img id="hero-cover-img" src="https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista" alt="Latest issue cover">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wave-divider">
+        <svg viewBox="0 0 1440 110" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path fill="#ffffff" d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,80C840,85,960,75,1080,64C1200,53,1320,43,1380,37.3L1440,32L1440,120L1380,120C1320,120,1200,120,1080,120C960,120,840,120,720,120C600,120,480,120,360,120C240,120,120,120,60,120L0,120Z"></path></svg>
+    </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-6 col-lg-3">
+                <span class="stat-num" id="stat-issues-2">—</span>
+                <span class="stat-label">Monthly Issues</span>
+            </div>
+            <div class="col-6 col-lg-3">
+                <span class="stat-num">120+</span>
+                <span class="stat-label">Contributing Experts</span>
+            </div>
+            <div class="col-6 col-lg-3">
+                <span class="stat-num">60+</span>
+                <span class="stat-label">Countries Read In</span>
+            </div>
+            <div class="col-6 col-lg-3">
+                <span class="stat-num">₹49</span>
+                <span class="stat-label">Per Issue, Read Online</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LATEST ISSUE -->
+<section class="section-padding" id="latest-issue">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-5 col-12 mb-4 mb-lg-0">
+                <img id="latest-cover-img" src="https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista" class="img-fluid rounded-4 shadow" alt="Latest issue cover">
+            </div>
+            <div class="col-lg-6 col-12 ms-lg-auto">
+                <div class="eyebrow">Current Issue</div>
+                <h2 class="mb-3" id="latest-title">Loading latest issue…</h2>
+                <p class="mb-2" id="latest-meta">&nbsp;</p>
+                <p class="mb-3" id="latest-summary">&nbsp;</p>
+                <div class="mb-4" id="latest-badge"></div>
+                <div class="d-flex flex-wrap gap-3" id="latest-cta"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section-padding section-bg" id="about">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-12 mb-5 mb-lg-0">
+                <div class="eyebrow">About the Magazine</div>
+                <h2 class="mb-4">Independent, practical reporting for the whole agriculture value chain.</h2>
+                <p>AgroVista Monthly has published issues since 2024 — covering crop science, livestock, agri-tech, policy and the markets that move the industry. Every issue is written for people who work the land and the businesses that support them.</p>
+                <p class="mb-0">Sign in with your email once, unlock an issue for a small one-time fee, and read it online any time afterwards — no re-purchase needed, ever.</p>
+            </div>
+            <div class="col-lg-5 col-12 ms-lg-auto">
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div>
+                        <h5>Markets &amp; Policy</h5>
+                        <p>Grain prices, trade rules and subsidy shifts explained in plain language.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="bi bi-cpu"></i></div>
+                    <div>
+                        <h5>Agri-Technology</h5>
+                        <p>Drones, sensors, precision farming and the startups building what's next.</p>
+                    </div>
+                </div>
+                <div class="feature-item mb-0">
+                    <div class="feature-icon"><i class="bi bi-shield-lock"></i></div>
+                    <div>
+                        <h5>Read Online, Securely</h5>
+                        <p>Every issue opens in a protected reader — no downloads, no re-sharing the file.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section-padding" id="categories">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-7 mx-auto text-center">
+                <div class="eyebrow justify-content-center">What We Cover</div>
+                <h2>Every issue, organized by the topics that matter to you</h2>
+            </div>
+        </div>
+        <div class="row g-3 justify-content-center">
+            <div class="col-auto"><a href="archive.html?q=Technology" class="category-pill"><i class="bi bi-cpu"></i> Technology</a></div>
+            <div class="col-auto"><a href="archive.html?q=Sustainability" class="category-pill"><i class="bi bi-tree"></i> Sustainability</a></div>
+            <div class="col-auto"><a href="archive.html?q=Markets" class="category-pill"><i class="bi bi-graph-up-arrow"></i> Markets</a></div>
+            <div class="col-auto"><a href="archive.html?q=Policy" class="category-pill"><i class="bi bi-bank"></i> Policy</a></div>
+            <div class="col-auto"><a href="archive.html?q=Livestock" class="category-pill"><i class="bi bi-egg-fried"></i> Livestock</a></div>
+            <div class="col-auto"><a href="archive.html?q=Crops" class="category-pill"><i class="bi bi-flower3"></i> Crops</a></div>
+            <div class="col-auto"><a href="archive.html?q=Innovation" class="category-pill"><i class="bi bi-lightbulb"></i> Innovation</a></div>
+            <div class="col-auto"><a href="archive.html?q=People" class="category-pill"><i class="bi bi-people"></i> People</a></div>
+        </div>
+    </div>
+</section>
+
+<!-- RECENT ISSUES -->
+<section class="section-padding section-bg">
+    <div class="container">
+        <div class="row align-items-end mb-5">
+            <div class="col-lg-7">
+                <div class="eyebrow">Recent Issues</div>
+                <h2 class="mb-0">Catch up on the last few months</h2>
+            </div>
+            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+                <a href="archive.html" class="link-arrow">Browse the full archive <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="row g-4" id="recent-issues-grid">
+            <div class="col-12 text-center text-muted py-5"><i class="bi bi-arrow-repeat"></i> Loading issues…</div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section-padding" id="contact">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-12 mb-5 mb-lg-0">
+                <div class="eyebrow">Get in Touch</div>
+                <h2 class="mb-4">Story ideas, feedback or advertising enquiries</h2>
+                <form action="#" method="post" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label mb-2">Full Name</label>
+                        <input type="text" class="form-control" placeholder="Your name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label mb-2">Email address</label>
+                        <input type="email" class="form-control" placeholder="you@example.com" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label mb-2">Message</label>
+                        <textarea class="form-control" rows="4" placeholder="Tell us what you'd like to see covered"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn custom-btn">Send Message</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-5 col-12 ms-lg-auto">
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="bi bi-envelope"></i></div>
+                    <div>
+                        <h5>Editorial Desk</h5>
+                        <p><a href="mailto:editor@agrovistamonthly.com" class="text-primary-custom">editor@agrovistamonthly.com</a></p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="bi bi-telephone"></i></div>
+                    <div>
+                        <h5>Reader Support</h5>
+                        <p>+91 80 4567 8900 &nbsp;·&nbsp; Mon–Fri, 9am–6pm IST</p>
+                    </div>
+                </div>
+                <div class="feature-item mb-0">
+                    <div class="feature-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div>
+                        <h5>Head Office</h5>
+                        <p class="mb-0">Bengaluru, Karnataka, India</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-12 mb-5 mb-lg-0">
+                <a class="navbar-brand d-flex align-items-center mb-3" href="index.html">
+                    <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+                    <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+                </a>
+                <p>Independent monthly reporting on agriculture technology, markets, sustainability and people — unlock any issue for ₹49.</p>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h5 class="mb-4">Explore</h5>
+                <p><a href="index.html#about">About</a></p>
+                <p><a href="index.html#categories">Categories</a></p>
+                <p><a href="archive.html">Archive</a></p>
+                <p class="mb-0"><a href="index.html#contact">Contact</a></p>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h5 class="mb-4">Categories</h5>
+                <p><a href="archive.html?q=Technology">Technology</a></p>
+                <p><a href="archive.html?q=Markets">Markets</a></p>
+                <p><a href="archive.html?q=Sustainability">Sustainability</a></p>
+                <p class="mb-0"><a href="archive.html?q=Policy">Policy</a></p>
+            </div>
+            <div class="col-lg-3 col-12 ms-lg-auto">
+                <h5 class="mb-4">Your Account</h5>
+                <p>Sign in with your email to view purchased issues on any device.</p>
+                <a href="login.html" class="btn custom-btn custom-btn-sm">Sign In</a>
+            </div>
+        </div>
+        <div class="footer-bottom d-flex flex-wrap justify-content-between">
+            <p class="mb-0">Copyright © 2026 AgroVista Monthly. All rights reserved.</p>
+            <p class="mb-0">Built for the global agriculture community.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="js/site.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+    var issues = await Agrovista.fetchIssues();
+    if (!issues.length) return;
+
+    document.getElementById('stat-issues').textContent = issues.length;
+    document.getElementById('stat-issues-2').textContent = issues.length;
+
+    var latest = issues[0];
+    document.getElementById('hero-cover-img').src = latest.cover;
+    document.getElementById('hero-cover-img').alt = latest.title + ' cover';
+    document.getElementById('latest-cover-img').src = latest.cover;
+    document.getElementById('latest-title').textContent = latest.title;
+    document.getElementById('latest-meta').innerHTML =
+        '<strong>' + latest.month + ' ' + latest.year + '</strong> &nbsp;·&nbsp; Volume ' + latest.volume + ', Issue ' + latest.issueNumber +
+        ' &nbsp;·&nbsp; ' + latest.pages + ' pages';
+    document.getElementById('latest-summary').textContent = latest.summary;
+    document.getElementById('latest-badge').innerHTML = Agrovista.badgeHTML(latest);
+    document.getElementById('latest-cta').innerHTML =
+        Agrovista.purchaseCtaHTML(latest) +
+        ' <a href="issue.html?id=' + latest.id + '" class="btn custom-btn custom-btn-secondary">Issue Details</a>';
+
+    var grid = document.getElementById('recent-issues-grid');
+    grid.innerHTML = '';
+    issues.slice(1, 4).forEach(function (issue) {
+        var col = document.createElement('div');
+        col.className = 'col-lg-4 col-md-6 col-12';
+        col.innerHTML =
+            '<div class="issue-card">' +
+                '<div class="issue-card-cover">' +
+                    '<span class="issue-card-tag">' + issue.category + '</span>' +
+                    (!issue.purchased ? '<div class="lock-overlay"><i class="bi bi-lock-fill"></i></div>' : '') +
+                    '<a href="issue.html?id=' + issue.id + '"><img src="' + issue.cover + '" alt="' + issue.title + '"></a>' +
+                '</div>' +
+                '<div class="issue-card-body">' +
+                    '<div class="issue-card-meta">' + issue.month + ' ' + issue.year + ' · Vol ' + issue.volume + ', No ' + issue.issueNumber + '</div>' +
+                    '<h3 class="issue-card-title"><a href="issue.html?id=' + issue.id + '">' + issue.title + '</a></h3>' +
+                    '<p class="mb-3 small">' + issue.summary + '</p>' +
+                    Agrovista.purchaseCtaHTML(issue, { small: true }) +
+                '</div>' +
+            '</div>';
+        grid.appendChild(col);
+    });
+});
+</script>
+</body>
+</html>

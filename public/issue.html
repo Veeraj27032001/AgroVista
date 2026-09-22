@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title id="page-title">Issue — AgroVista Monthly</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar navbar-expand-lg fixed-top scrolled">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">
+            <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+            <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-lg-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#categories">Categories</a></li>
+                <li class="nav-item"><a class="nav-link active" href="archive.html">Archive</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="ms-lg-3 mt-3 mt-lg-0 d-flex align-items-center gap-2" id="nav-auth-slot">
+                <a href="login.html" class="btn custom-btn custom-btn-secondary custom-btn-sm">Sign in</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div id="issue-content" class="d-none">
+
+<section class="issue-hero">
+    <div class="container">
+        <div class="breadcrumb-trail">
+            <a href="index.html">Home</a> / <a href="archive.html">Archive</a> / <span id="crumb-title">Issue</span>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-lg-4 col-8 mx-auto mx-lg-0 mb-4 mb-lg-0">
+                <img id="issue-cover" src="" alt="" class="issue-hero-cover">
+            </div>
+            <div class="col-lg-8 col-12 ms-lg-4">
+                <div class="issue-card-meta mb-2" id="issue-category-tag">Category</div>
+                <h1 class="mb-3" id="issue-title">Issue Title</h1>
+                <p class="mb-3" id="issue-summary">Summary</p>
+                <div class="mb-3" id="issue-badge"></div>
+                <div class="d-flex flex-wrap gap-4 mb-4">
+                    <div><strong id="issue-vol">Vol —</strong><div class="small">Volume</div></div>
+                    <div><strong id="issue-num">No —</strong><div class="small">Issue Number</div></div>
+                    <div><strong id="issue-date">—</strong><div class="small">Published</div></div>
+                    <div><strong id="issue-pages">—</strong><div class="small">Pages</div></div>
+                </div>
+                <div class="d-flex flex-wrap gap-3" id="issue-cta"></div>
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-shield-lock me-1"></i>Read online in a protected viewer — no PDF download.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 col-12 mb-5 mb-lg-0">
+                <div class="eyebrow">In This Issue</div>
+                <h2 class="mb-4">Table of Contents</h2>
+                <ul class="toc-list" id="toc-list"></ul>
+            </div>
+            <div class="col-lg-4 col-12 ms-lg-auto">
+                <div class="download-box">
+                    <h5 class="mb-3"><i class="bi bi-shield-lock text-primary-custom me-2"></i>Read This Issue</h5>
+                    <p class="mb-3">Unlock once and read anytime afterwards, from your account — online only, no file to download or share.</p>
+                    <div id="issue-sidebar-cta"></div>
+                    <div class="file-meta d-flex justify-content-between mt-3">
+                        <span>Pages</span><strong id="issue-pages-2">—</strong>
+                    </div>
+                    <div class="file-meta d-flex justify-content-between">
+                        <span>Access</span><strong>View Online Only</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-padding section-bg">
+    <div class="container">
+        <div class="eyebrow">Keep Reading</div>
+        <h2 class="mb-4">More issues from this volume</h2>
+        <div class="row g-4" id="related-issues-grid"></div>
+    </div>
+</section>
+
+</div>
+
+<div id="issue-not-found" class="d-none section-padding" style="padding-top:170px;">
+    <div class="container text-center">
+        <i class="bi bi-journal-x" style="font-size:48px;color:var(--border-color);"></i>
+        <h2 class="mt-3">Issue not found</h2>
+        <p>The issue you're looking for doesn't exist or the link is incorrect.</p>
+        <a href="archive.html" class="btn custom-btn">Go to Archive</a>
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-12 mb-5 mb-lg-0">
+                <a class="navbar-brand d-flex align-items-center mb-3" href="index.html">
+                    <span class="navbar-brand-mark"><i class="bi bi-flower1"></i></span>
+                    <span class="navbar-brand-text">AgroVista<small>Monthly Magazine</small></span>
+                </a>
+                <p>Independent monthly reporting on agriculture technology, markets, sustainability and people — unlock any issue for ₹49.</p>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h5 class="mb-4">Explore</h5>
+                <p><a href="index.html#about">About</a></p>
+                <p><a href="index.html#categories">Categories</a></p>
+                <p><a href="archive.html">Archive</a></p>
+                <p class="mb-0"><a href="index.html#contact">Contact</a></p>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h5 class="mb-4">Categories</h5>
+                <p><a href="archive.html?q=Technology">Technology</a></p>
+                <p><a href="archive.html?q=Markets">Markets</a></p>
+                <p><a href="archive.html?q=Sustainability">Sustainability</a></p>
+                <p class="mb-0"><a href="archive.html?q=Policy">Policy</a></p>
+            </div>
+            <div class="col-lg-3 col-12 ms-lg-auto">
+                <h5 class="mb-4">Your Account</h5>
+                <p>Sign in with your email to view purchased issues on any device.</p>
+                <a href="login.html" class="btn custom-btn custom-btn-sm">Sign In</a>
+            </div>
+        </div>
+        <div class="footer-bottom d-flex flex-wrap justify-content-between">
+            <p class="mb-0">Copyright © 2026 AgroVista Monthly. All rights reserved.</p>
+            <p class="mb-0">Built for the global agriculture community.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="js/site.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('id');
+    var issue = id ? await Agrovista.fetchIssue(id) : null;
+
+    if (!issue) {
+        document.getElementById('issue-not-found').classList.remove('d-none');
+        return;
+    }
+
+    document.getElementById('issue-content').classList.remove('d-none');
+    document.getElementById('page-title').textContent = issue.title + ' — AgroVista Monthly';
+    document.getElementById('crumb-title').textContent = issue.month + ' ' + issue.year;
+    document.getElementById('issue-cover').src = issue.cover;
+    document.getElementById('issue-cover').alt = issue.title;
+    document.getElementById('issue-category-tag').textContent = issue.category + ' · ' + issue.month + ' ' + issue.year;
+    document.getElementById('issue-title').textContent = issue.title;
+    document.getElementById('issue-summary').textContent = issue.summary;
+    document.getElementById('issue-badge').innerHTML = Agrovista.badgeHTML(issue);
+    document.getElementById('issue-vol').textContent = 'Vol ' + issue.volume;
+    document.getElementById('issue-num').textContent = 'No ' + issue.issueNumber;
+    document.getElementById('issue-date').textContent = issue.month + ' ' + issue.year;
+    document.getElementById('issue-pages').textContent = issue.pages + ' pgs';
+    document.getElementById('issue-pages-2').textContent = issue.pages + ' pages';
+    document.getElementById('issue-cta').innerHTML = Agrovista.purchaseCtaHTML(issue);
+    document.getElementById('issue-sidebar-cta').innerHTML = Agrovista.purchaseCtaHTML(issue) ? Agrovista.purchaseCtaHTML(issue).replace('class="btn custom-btn', 'class="btn custom-btn w-100') : '';
+
+    var tocList = document.getElementById('toc-list');
+    issue.toc.forEach(function (item, idx) {
+        var li = document.createElement('li');
+        li.innerHTML = '<span class="toc-num">' + String(idx + 1).padStart(2, '0') + '</span><span>' + item + '</span>';
+        tocList.appendChild(li);
+    });
+
+    var allIssues = await Agrovista.fetchIssues();
+    var related = allIssues.filter(function (i) { return i.volume === issue.volume && i.id !== issue.id; }).slice(0, 4);
+    var relGrid = document.getElementById('related-issues-grid');
+    related.forEach(function (rel) {
+        var col = document.createElement('div');
+        col.className = 'col-lg-3 col-md-6 col-12';
+        col.innerHTML =
+            '<div class="issue-card">' +
+                '<div class="issue-card-cover">' +
+                    '<span class="issue-card-tag">' + rel.category + '</span>' +
+                    (!rel.purchased ? '<div class="lock-overlay"><i class="bi bi-lock-fill"></i></div>' : '') +
+                    '<a href="issue.html?id=' + rel.id + '"><img src="' + rel.cover + '" alt="' + rel.title + '"></a>' +
+                '</div>' +
+                '<div class="issue-card-body">' +
+                    '<div class="issue-card-meta">' + rel.month + ' ' + rel.year + '</div>' +
+                    '<h3 class="issue-card-title" style="font-size:16px;"><a href="issue.html?id=' + rel.id + '">' + rel.title + '</a></h3>' +
+                    '<div class="mt-2">' + Agrovista.purchaseCtaHTML(rel, { small: true }) + '</div>' +
+                '</div>' +
+            '</div>';
+        relGrid.appendChild(col);
+    });
+});
+</script>
+</body>
+</html>
