@@ -2,15 +2,17 @@
 
 import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Download, Lock, ShoppingCart } from 'lucide-react';
 import type { Format, Issue } from '@/lib/types';
 import { getSession } from '@/lib/client/session';
 import { addToCart } from '@/lib/client/cart';
 import { runRazorpayCheckout } from '@/lib/client/checkout';
 import FormatSelector, { type FormatOption } from '@/components/public/FormatSelector';
 import CouponInput, { type AppliedCoupon } from '@/components/public/CouponInput';
-import Button from '@/components/ui/Button';
-import Spinner from '@/components/ui/Spinner';
+
+function lowestPrice(issue: Issue): number | null {
+  const prices = [issue.softCopyRate, issue.hardCopyRate, issue.bothRate].filter((p): p is number => p !== null);
+  return prices.length ? Math.min(...prices) : null;
+}
 
 export default function IssueDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -21,6 +23,7 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [busy, setBusy] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [related, setRelated] = useState<Issue[]>([]);
 
   useEffect(() => {
     fetch(`/api/issues/${id}`)
@@ -32,23 +35,33 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
           (f) => data.issue[f === 'soft' ? 'softCopyRate' : f === 'hard' ? 'hardCopyRate' : 'bothRate'] !== null
         );
         if (firstAvailable) setFormat(firstAvailable);
+
+        fetch(`/api/issues?pageSize=5`)
+          .then((r) => r.json())
+          .then((d) => setRelated((d.issues || []).filter((i: Issue) => i.id !== data.issue.id).slice(0, 4)));
       })
       .catch(() => setNotFound(true));
   }, [id]);
 
   if (notFound) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-24 text-center">
-        <h1 className="text-2xl font-bold">Issue not found</h1>
-        <p className="mt-2 text-gray-500">This issue doesn&apos;t exist or isn&apos;t published yet.</p>
+      <div className="section-padding" style={{ paddingTop: 170 }}>
+        <div className="container text-center">
+          <i className="bi bi-journal-x" style={{ fontSize: 48, color: 'var(--border-color)' }}></i>
+          <h2 className="mt-3">Issue not found</h2>
+          <p>The issue you&apos;re looking for doesn&apos;t exist or the link is incorrect.</p>
+          <a href="/archive" className="btn custom-btn">
+            Go to Archive
+          </a>
+        </div>
       </div>
     );
   }
 
   if (!issue) {
     return (
-      <div className="flex justify-center py-24">
-        <Spinner />
+      <div className="section-padding text-center" style={{ paddingTop: 170 }}>
+        <i className="bi bi-arrow-repeat" style={{ fontSize: 32 }}></i>
       </div>
     );
   }
@@ -123,42 +136,105 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const price0 = lowestPrice(issue);
+
   return (
-    <div className="mx-auto grid max-w-5xl gap-10 px-4 py-12 md:grid-cols-2">
-      <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl shadow-lg">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={issue.posterUrl || undefined} alt={issue.title} className="aspect-[3/4] w-full object-cover" />
-      </div>
-
-      <div>
-        <span className="text-xs font-semibold uppercase text-primary">{issue.language}</span>
-        <h1 className="mt-1 font-serif text-3xl font-bold">{issue.title}</h1>
-        {issue.description && <p className="mt-3 text-gray-600">{issue.description}</p>}
-
-        {hasAccess ? (
-          <div className="mt-6">
-            <Button onClick={handleDownload} loading={downloading}>
-              <Download className="h-4 w-4" /> Download PDF
-            </Button>
+    <div>
+      <section className="issue-hero">
+        <div className="container">
+          <div className="breadcrumb-trail">
+            <a href="/">Home</a> / <a href="/archive">Archive</a> / <span>{issue.title}</span>
           </div>
-        ) : (
-          <div className="mt-6 space-y-4">
-            <FormatSelector options={options} value={format} onChange={setFormat} />
-            {issue.couponApplicable && (
-              <CouponInput itemType="issue" itemId={issue.id} format={format} onApplied={setCoupon} />
-            )}
-            <p className="text-2xl font-bold">{price !== null ? `₹${price}` : 'Not available'}</p>
-            <div className="flex gap-3">
-              <Button onClick={handleBuyNow} loading={busy} disabled={price === null}>
-                <Lock className="h-4 w-4" /> Buy Now
-              </Button>
-              <Button variant="secondary" onClick={handleAddToCart} disabled={price === null}>
-                <ShoppingCart className="h-4 w-4" /> Add to Cart
-              </Button>
+          <div className="row align-items-center">
+            <div className="col-lg-4 col-8 mx-auto mx-lg-0 mb-4 mb-lg-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'}
+                alt={issue.title}
+                className="issue-hero-cover"
+              />
+            </div>
+            <div className="col-lg-8 col-12 ms-lg-4">
+              <div className="issue-card-meta mb-2">{issue.language}</div>
+              <h1 className="mb-3">{issue.title}</h1>
+              <p className="mb-3">{issue.description}</p>
+              <div className="mb-3">
+                {hasAccess ? (
+                  <span className="badge-owned">
+                    <i className="bi bi-check-circle-fill"></i> You own this issue
+                  </span>
+                ) : (
+                  <span className="badge-locked">
+                    <i className="bi bi-lock-fill"></i> {price0 !== null ? `₹${price0} to unlock` : 'View details'}
+                  </span>
+                )}
+              </div>
+
+              {hasAccess ? (
+                <div className="d-flex flex-wrap gap-3 mb-4">
+                  <button type="button" className="btn custom-btn" onClick={handleDownload} disabled={downloading}>
+                    <i className="bi bi-download me-1"></i> {downloading ? 'Preparing…' : 'Download PDF'}
+                  </button>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <FormatSelector options={options} value={format} onChange={setFormat} />
+                  {issue.couponApplicable && (
+                    <div className="mt-3">
+                      <CouponInput itemType="issue" itemId={issue.id} format={format} onApplied={setCoupon} />
+                    </div>
+                  )}
+                  <div className="d-flex flex-wrap align-items-center gap-3 mt-3">
+                    <button type="button" className="btn custom-btn" onClick={handleBuyNow} disabled={busy || price === null}>
+                      <i className="bi bi-unlock me-1"></i> {busy ? 'Starting…' : `Buy Now — ${price !== null ? `₹${price}` : ''}`}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn custom-btn custom-btn-secondary"
+                      onClick={handleAddToCart}
+                      disabled={price === null}
+                    >
+                      <i className="bi bi-cart me-1"></i> Add to Cart
+                    </button>
+                  </div>
+                </div>
+              )}
+              <p className="small text-muted mt-3 mb-0">
+                <i className="bi bi-shield-lock me-1"></i>Sign in to unlock this issue and read it online.
+              </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
+
+      {related.length > 0 && (
+        <section className="section-padding section-bg">
+          <div className="container">
+            <div className="eyebrow">Keep Reading</div>
+            <h2 className="mb-4">More issues</h2>
+            <div className="row g-4">
+              {related.map((rel) => (
+                <div className="col-lg-3 col-md-6 col-12" key={rel.id}>
+                  <div className="issue-card">
+                    <div className="issue-card-cover">
+                      <span className="issue-card-tag">{rel.language}</span>
+                      <a href={`/issues/${rel.id}`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={rel.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'} alt={rel.title} />
+                      </a>
+                    </div>
+                    <div className="issue-card-body">
+                      <h3 className="issue-card-title" style={{ fontSize: 16 }}>
+                        <a href={`/issues/${rel.id}`}>{rel.title}</a>
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -36,6 +36,40 @@ export async function getSession(): Promise<SessionUser | null> {
   return verifySessionToken(token);
 }
 
+export function signPasswordResetToken(userId: string): string {
+  return jwt.sign({ userId, type: 'password_reset' }, config.jwtSecret, { expiresIn: '30m' });
+}
+
+export function verifyPasswordResetToken(token: string): { userId: string } | null {
+  try {
+    const payload = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
+    if (payload.type !== 'password_reset' || !payload.userId) return null;
+    return { userId: payload.userId as string };
+  } catch {
+    return null;
+  }
+}
+
+export const OTP_COOKIE_NAME = 'agrovista_otp';
+
+export function generateOtpCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+export function signOtpToken(userId: string, code: string): string {
+  return jwt.sign({ userId, code, type: 'otp' }, config.jwtSecret, { expiresIn: '10m' });
+}
+
+export function verifyOtpToken(token: string): { userId: string; code: string } | null {
+  try {
+    const payload = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
+    if (payload.type !== 'otp' || !payload.userId || !payload.code) return null;
+    return { userId: payload.userId as string, code: payload.code as string };
+  } catch {
+    return null;
+  }
+}
+
 export const SESSION_COOKIE_MAX_AGE_SECONDS = config.jwtExpiryDays * 24 * 60 * 60;
 
 /** For Server Components: redirects to /login (or /admin login-gate) if the check fails. */

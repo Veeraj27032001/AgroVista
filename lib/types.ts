@@ -76,6 +76,10 @@ export type Issue = {
   status: IssueStatus;
   publishedAt: string | null;
   createdAt: string;
+  /** Display-only, populated by listing/detail queries that join through volume/slot. */
+  volumeNumber?: number | null;
+  slotNumber?: number | null;
+  year?: number | null;
 };
 
 /** Server-only extension — includes the private storage path. Never send to the client. */

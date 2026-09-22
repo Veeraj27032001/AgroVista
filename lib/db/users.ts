@@ -71,6 +71,12 @@ export async function findUserByEmail(email: string): Promise<(User & { password
   return { ...toUser(row), passwordHash: row.password_hash };
 }
 
+export async function findUserByPhone(phone: string): Promise<User | null> {
+  const { data, error } = await getSupabaseAdmin().from('users').select('*').eq('phone', phone).maybeSingle();
+  if (error) throw error;
+  return data ? toUser(data as UserRow) : null;
+}
+
 export async function findUserById(id: string): Promise<User | null> {
   const { data, error } = await getSupabaseAdmin().from('users').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
@@ -89,6 +95,11 @@ export async function updateUserProfile(
     .single();
   if (error) throw error;
   return toUser(data as UserRow);
+}
+
+export async function updateUserPasswordHash(id: string, passwordHash: string): Promise<void> {
+  const { error } = await getSupabaseAdmin().from('users').update({ password_hash: passwordHash }).eq('id', id);
+  if (error) throw error;
 }
 
 export async function listUsers(): Promise<User[]> {

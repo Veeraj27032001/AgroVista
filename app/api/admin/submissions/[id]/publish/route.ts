@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getSubmission, listVersionsForSubmission, updateSubmissionStatus } from '@/lib/db/submissions';
-import { createIssue } from '@/lib/db/catalog';
+import { createIssue, getSlot } from '@/lib/db/catalog';
 import { autoDeliverToHardCopySubscribers } from '@/lib/subscription';
 
 /**
@@ -32,8 +32,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { slotId, posterUrl, softRate, hardRate, bothRate, language } = body;
   if (!slotId) return NextResponse.json({ error: 'missing_slot' }, { status: 400 });
 
+  const slot = await getSlot(slotId);
+
   const issue = await createIssue({
     slotId,
+    volumeId: slot?.volumeId || null,
     title: submission.title,
     description: submission.description || undefined,
     language: language || submission.language,

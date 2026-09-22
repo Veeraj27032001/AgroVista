@@ -200,7 +200,13 @@ type IssueRow = {
   created_at: string;
 };
 
-function toIssue(r: IssueRow): Issue {
+type IssueRowWithMeta = IssueRow & {
+  volumes?: { volume_number: number; publication_years?: { year: number } | null } | null;
+  issue_slots?: { slot_number: number } | null;
+};
+
+function toIssue(r: IssueRow | IssueRowWithMeta): Issue {
+  const withMeta = r as IssueRowWithMeta;
   return {
     id: r.id,
     slotId: r.slot_id,
@@ -216,7 +222,10 @@ function toIssue(r: IssueRow): Issue {
     couponApplicable: r.coupon_applicable,
     status: r.status,
     publishedAt: r.published_at,
-    createdAt: r.created_at
+    createdAt: r.created_at,
+    volumeNumber: withMeta.volumes?.volume_number ?? null,
+    year: withMeta.volumes?.publication_years?.year ?? null,
+    slotNumber: withMeta.issue_slots?.slot_number ?? null
   };
 }
 

@@ -2,10 +2,6 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import toast from 'react-hot-toast';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -13,10 +9,12 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    setError('');
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -25,33 +23,69 @@ function LoginForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.message || 'Incorrect email or password.');
+        setError(data.message || 'Incorrect email or password.');
         setBusy(false);
         return;
       }
       window.location.href = redirect;
     } catch {
-      toast.error('Network error. Please try again.');
+      setError('Network error. Please try again.');
       setBusy(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-24">
-      <h1 className="mb-6 text-center text-2xl font-bold">Sign in</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Email address" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Input label="Password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        <Button type="submit" className="w-full" loading={busy}>
-          Sign In
-        </Button>
-      </form>
-      <p className="mt-4 text-center text-sm text-gray-500">
-        No account?{' '}
-        <Link href="/register" className="font-semibold text-primary">
-          Register
-        </Link>
-      </p>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <a className="navbar-brand" href="/">
+          <span className="navbar-brand-mark">
+            <i className="bi bi-flower1"></i>
+          </span>
+          <span className="navbar-brand-text">
+            AgroVista<small>Monthly Magazine</small>
+          </span>
+        </a>
+
+        <h3 className="mb-2">Sign in to read your issues</h3>
+        <p className="mb-4">Enter your email and password to continue.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            className="form-control form-control-lg mb-3"
+            placeholder="you@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="form-control form-control-lg mb-2"
+            placeholder="Password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <div className="text-end mb-3">
+            <a href="/forgot-password" className="small">
+              Forgot password?
+            </a>
+          </div>
+          <button type="submit" className="btn custom-btn w-100" disabled={busy}>
+            {busy && <span className="btn-spinner"></span>}
+            {busy ? 'Signing in…' : 'Sign In'}
+          </button>
+        </form>
+        <div className={`auth-status${error ? ' error' : ''}`}>{error}</div>
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+        <a href="/login-otp" className="btn custom-btn custom-btn-secondary w-100 mb-2">
+          Sign in with a Code
+        </a>
+        <a href="/register" className="btn custom-btn custom-btn-secondary w-100">
+          Create an Account
+        </a>
+      </div>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import '../globals.css';
 import { requireAdminOrRedirect } from '@/lib/auth';
 import { findUserById } from '@/lib/db/users';
 import AdminSidebar from '@/components/admin/AdminSidebar';
