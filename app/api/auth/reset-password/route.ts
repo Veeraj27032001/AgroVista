@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, verifyPasswordResetToken } from '@/lib/auth';
-import { updateUserPasswordHash } from '@/lib/db/users';
+import { findUserById, updateUserPasswordHash } from '@/lib/db/users';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -19,8 +19,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const user = await findUserById(payload.userId);
+  if (!user) {
+    return NextResponse.json({ error: 'not_found', message: 'This account no longer exists.' }, { status: 400 });
+  }
+
   const passwordHash = await hashPassword(password);
-  await updateUserPasswordHash(payload.userId, passwordHash);
+  await updateUserPasswordHash(user.id, passwordHash);
 
   return NextResponse.json({ ok: true });
 }

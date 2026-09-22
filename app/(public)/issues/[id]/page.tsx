@@ -173,7 +173,8 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
               {hasAccess ? (
                 <div className="d-flex flex-wrap gap-3 mb-4">
                   <button type="button" className="btn custom-btn" onClick={handleDownload} disabled={downloading}>
-                    <i className="bi bi-download me-1"></i> {downloading ? 'Preparing…' : 'Download PDF'}
+                    {downloading ? <span className="btn-spinner"></span> : <i className="bi bi-download me-1"></i>}
+                    {downloading ? 'Preparing…' : 'Download PDF'}
                   </button>
                 </div>
               ) : (
@@ -186,7 +187,8 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
                   )}
                   <div className="d-flex flex-wrap align-items-center gap-3 mt-3">
                     <button type="button" className="btn custom-btn" onClick={handleBuyNow} disabled={busy || price === null}>
-                      <i className="bi bi-unlock me-1"></i> {busy ? 'Starting…' : `Buy Now — ${price !== null ? `₹${price}` : ''}`}
+                      {busy ? <span className="btn-spinner"></span> : <i className="bi bi-unlock me-1"></i>}
+                      {busy ? 'Starting…' : `Buy Now — ${price !== null ? `₹${price}` : ''}`}
                     </button>
                     <button
                       type="button"

@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
   const issue = await createIssue({
     volumeId,
     slotId: null,
+    categoryId: (form.get('categoryId') as string) || null,
     isSpecialEdition: true,
     title,
     description: (form.get('description') as string) || undefined,

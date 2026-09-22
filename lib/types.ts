@@ -60,10 +60,17 @@ export type IssueSlot = {
   issueType: 'monthly' | 'weekly';
 };
 
+export type Category = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 export type Issue = {
   id: string;
   slotId: string | null;
   volumeId: string | null;
+  categoryId: string | null;
   isSpecialEdition: boolean;
   title: string;
   description: string | null;
@@ -76,10 +83,12 @@ export type Issue = {
   status: IssueStatus;
   publishedAt: string | null;
   createdAt: string;
-  /** Display-only, populated by listing/detail queries that join through volume/slot. */
+  /** Display-only, populated by listing/detail queries that join through volume/slot/category. */
   volumeNumber?: number | null;
   slotNumber?: number | null;
   year?: number | null;
+  categoryName?: string | null;
+  categorySlug?: string | null;
 };
 
 /** Server-only extension — includes the private storage path. Never send to the client. */

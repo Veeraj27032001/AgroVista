@@ -185,6 +185,7 @@ type IssueRow = {
   id: string;
   slot_id: string | null;
   volume_id: string | null;
+  category_id: string | null;
   is_special_edition: boolean;
   title: string;
   description: string | null;
@@ -203,6 +204,7 @@ type IssueRow = {
 type IssueRowWithMeta = IssueRow & {
   volumes?: { volume_number: number; publication_years?: { year: number } | null } | null;
   issue_slots?: { slot_number: number } | null;
+  categories?: { name: string; slug: string } | null;
 };
 
 function toIssue(r: IssueRow | IssueRowWithMeta): Issue {
@@ -211,6 +213,7 @@ function toIssue(r: IssueRow | IssueRowWithMeta): Issue {
     id: r.id,
     slotId: r.slot_id,
     volumeId: r.volume_id,
+    categoryId: r.category_id,
     isSpecialEdition: r.is_special_edition,
     title: r.title,
     description: r.description,
@@ -225,7 +228,9 @@ function toIssue(r: IssueRow | IssueRowWithMeta): Issue {
     createdAt: r.created_at,
     volumeNumber: withMeta.volumes?.volume_number ?? null,
     year: withMeta.volumes?.publication_years?.year ?? null,
-    slotNumber: withMeta.issue_slots?.slot_number ?? null
+    slotNumber: withMeta.issue_slots?.slot_number ?? null,
+    categoryName: withMeta.categories?.name ?? null,
+    categorySlug: withMeta.categories?.slug ?? null
   };
 }
 
@@ -236,6 +241,8 @@ function toIssueWithPdfPath(r: IssueRow): IssueWithPdfPath {
 export type IssueFilters = {
   year?: number;
   volumeId?: string;
+  slotNumber?: number;
+  categorySlug?: string;
   language?: string;
   search?: string;
   page?: number;
@@ -249,9 +256,20 @@ export async function listPublishedIssues(filters: IssueFilters = {}): Promise<{
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  // Embedded-resource filters only actually restrict the top-level rows in
+  // PostgREST when that relation is joined with `!inner` — but category_id
+  // (and, for special editions, slot_id) can legitimately be null, so those
+  // joins must stay LEFT (plain) unless that specific filter is active, or
+  // every issue without a category/slot would silently vanish from every listing.
+  const slotJoin = filters.slotNumber ? 'issue_slots!inner(slot_number)' : 'issue_slots(slot_number)';
+  const categoryJoin = filters.categorySlug ? 'categories!inner(name, slug)' : 'categories(name, slug)';
+
   let query = getSupabaseAdmin()
     .from('issues')
-    .select('*, volumes!inner(id, volume_number, year_id, publication_years!inner(year))', { count: 'exact' })
+    .select(
+      `*, volumes!inner(id, volume_number, year_id, publication_years!inner(year)), ${slotJoin}, ${categoryJoin}`,
+      { count: 'exact' }
+    )
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .range(from, to);
@@ -260,6 +278,8 @@ export async function listPublishedIssues(filters: IssueFilters = {}): Promise<{
   if (filters.search) query = query.ilike('title', `%${filters.search}%`);
   if (filters.volumeId) query = query.eq('volume_id', filters.volumeId);
   if (filters.year) query = query.eq('volumes.publication_years.year', filters.year);
+  if (filters.slotNumber) query = query.eq('issue_slots.slot_number', filters.slotNumber);
+  if (filters.categorySlug) query = query.eq('categories.slug', filters.categorySlug);
   if (filters.specialEditionsOnly !== undefined) query = query.eq('is_special_edition', filters.specialEditionsOnly);
 
   const { data, error, count } = await query;
@@ -289,6 +309,7 @@ export async function getIssueWithPdfPath(id: string): Promise<IssueWithPdfPath 
 export type CreateIssueParams = {
   slotId?: string | null;
   volumeId?: string | null;
+  categoryId?: string | null;
   isSpecialEdition?: boolean;
   title: string;
   description?: string;
@@ -308,6 +329,7 @@ export async function createIssue(params: CreateIssueParams): Promise<Issue> {
     .insert({
       slot_id: params.slotId ?? null,
       volume_id: params.volumeId ?? null,
+      category_id: params.categoryId ?? null,
       is_special_edition: params.isSpecialEdition ?? false,
       title: params.title,
       description: params.description || null,
@@ -331,6 +353,7 @@ export async function updateIssue(id: string, params: Partial<CreateIssueParams>
   const patch: Record<string, unknown> = {};
   if (params.slotId !== undefined) patch.slot_id = params.slotId;
   if (params.volumeId !== undefined) patch.volume_id = params.volumeId;
+  if (params.categoryId !== undefined) patch.category_id = params.categoryId;
   if (params.isSpecialEdition !== undefined) patch.is_special_edition = params.isSpecialEdition;
   if (params.title !== undefined) patch.title = params.title;
   if (params.description !== undefined) patch.description = params.description;

@@ -1,4 +1,5 @@
 import { listPublishedIssues } from '@/lib/db/catalog';
+import { listCategories } from '@/lib/db/categories';
 import { getSession } from '@/lib/auth';
 import { hasPdfAccess } from '@/lib/subscription';
 
@@ -18,6 +19,7 @@ export default async function HomePage() {
   const { issues } = await listPublishedIssues({ page: 1, pageSize: 4 });
   const latest = issues[0];
   const recent = issues.slice(1, 4);
+  const categories = await listCategories();
 
   const session = await getSession();
   const latestAccess = latest && session ? await hasPdfAccess(session.userId, latest) : false;
@@ -211,31 +213,27 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-padding" id="categories">
-        <div className="container">
-          <div className="row mb-5">
-            <div className="col-lg-7 mx-auto text-center">
-              <div className="eyebrow justify-content-center">What We Cover</div>
-              <h2>Every issue, organized by the topics that matter to you</h2>
+      {categories.length > 0 && (
+        <section className="section-padding" id="categories">
+          <div className="container">
+            <div className="row mb-5">
+              <div className="col-lg-7 mx-auto text-center">
+                <div className="eyebrow justify-content-center">What We Cover</div>
+                <h2>Every issue, organized by the topics that matter to you</h2>
+              </div>
+            </div>
+            <div className="row g-3 justify-content-center">
+              {categories.map((c) => (
+                <div className="col-auto" key={c.id}>
+                  <a href={`/archive?category=${encodeURIComponent(c.slug)}`} className="category-pill">
+                    <i className="bi bi-tag"></i> {c.name}
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="row g-3 justify-content-center">
-            {[
-              ['English', 'bi-globe'],
-              ['Hindi', 'bi-translate'],
-              ['Kannada', 'bi-translate'],
-              ['Tamil', 'bi-translate'],
-              ['Telugu', 'bi-translate']
-            ].map(([label, icon]) => (
-              <div className="col-auto" key={label}>
-                <a href={`/archive?language=${encodeURIComponent(label)}`} className="category-pill">
-                  <i className={`bi ${icon}`}></i> {label}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="section-padding section-bg">
         <div className="container">

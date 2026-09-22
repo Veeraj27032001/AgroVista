@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireUserOrRedirect } from '@/lib/auth';
 
 const LINKS = [
   { href: '/account', label: 'Profile' },
@@ -8,7 +9,11 @@ const LINKS = [
   { href: '/account/submissions', label: 'Submissions' }
 ];
 
-export default function AccountLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic';
+
+export default async function AccountLayout({ children }: { children: React.ReactNode }) {
+  await requireUserOrRedirect();
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <div className="grid gap-8 md:grid-cols-[200px_1fr]">

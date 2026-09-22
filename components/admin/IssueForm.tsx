@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import type { Issue } from '@/lib/types';
+import type { Category, Issue } from '@/lib/types';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
 import Select from '../ui/Select';
@@ -25,6 +25,8 @@ export default function IssueForm({
   const [title, setTitle] = useState(existing?.title || '');
   const [description, setDescription] = useState(existing?.description || '');
   const [language, setLanguage] = useState(existing?.language || 'English');
+  const [categoryId, setCategoryId] = useState(existing?.categoryId || '');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [softCopyRate, setSoftCopyRate] = useState(existing?.softCopyRate?.toString() || '');
   const [hardCopyRate, setHardCopyRate] = useState(existing?.hardCopyRate?.toString() || '');
   const [bothRate, setBothRate] = useState(existing?.bothRate?.toString() || '');
@@ -34,6 +36,12 @@ export default function IssueForm({
   const [pdf, setPdf] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    fetch('/api/admin/categories', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => setCategories(data.categories || []));
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -42,6 +50,7 @@ export default function IssueForm({
     form.set('title', title);
     form.set('description', description);
     form.set('language', language);
+    if (categoryId) form.set('categoryId', categoryId);
     if (softCopyRate) form.set('softCopyRate', softCopyRate);
     if (hardCopyRate) form.set('hardCopyRate', hardCopyRate);
     if (bothRate) form.set('bothRate', bothRate);
@@ -88,6 +97,13 @@ export default function IssueForm({
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
         options={['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu'].map((l) => ({ value: l, label: l }))}
+      />
+      <Select
+        label="Category"
+        placeholder="No category"
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+        options={categories.map((c) => ({ value: c.id, label: c.name }))}
       />
       <FileUpload label="Poster Image" accept="image/*" onChange={setPoster} />
       <FileUpload label="Issue PDF" accept=".pdf" onChange={setPdf} />

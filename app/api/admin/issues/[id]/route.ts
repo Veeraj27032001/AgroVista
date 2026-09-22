@@ -29,6 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (form.has('title')) patch.title = String(form.get('title'));
   if (form.has('description')) patch.description = String(form.get('description'));
   if (form.has('language')) patch.language = String(form.get('language'));
+  if (form.has('categoryId')) patch.categoryId = String(form.get('categoryId')) || null;
   if (form.has('softCopyRate')) patch.softCopyRate = Number(form.get('softCopyRate'));
   if (form.has('hardCopyRate')) patch.hardCopyRate = Number(form.get('hardCopyRate'));
   if (form.has('bothRate')) patch.bothRate = Number(form.get('bothRate'));

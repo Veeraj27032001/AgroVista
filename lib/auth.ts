@@ -83,7 +83,7 @@ export async function requireUserOrRedirect(): Promise<SessionUser> {
 export async function requireAdminOrRedirect(): Promise<SessionUser> {
   const { redirect } = await import('next/navigation');
   const session = await getSession();
-  if (!session) redirect('/login');
-  if (session!.role !== 'admin') redirect('/');
+  if (!session) redirect('/login?redirect=/admin');
+  if (session!.role !== 'admin') redirect('/unauthorized');
   return session as SessionUser;
 }

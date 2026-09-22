@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Issue } from '@/lib/types';
+import { useSearchParams } from 'next/navigation';
+import type { Category, Issue, PublicationYear, Volume } from '@/lib/types';
 
 const LANGUAGES = ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu'];
 
@@ -16,7 +17,7 @@ function cardHtml(issue: Issue) {
     <div className="col-lg-3 col-md-6 col-12 issue-col" key={issue.id}>
       <div className="issue-card">
         <div className="issue-card-cover">
-          <span className="issue-card-tag">{issue.language}</span>
+          <span className="issue-card-tag">{issue.categoryName || issue.language}</span>
           <a href={`/issues/${issue.id}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'} alt={issue.title} />
@@ -25,6 +26,8 @@ function cardHtml(issue: Issue) {
         <div className="issue-card-body">
           <div className="issue-card-meta">
             {issue.publishedAt ? new Date(issue.publishedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
+            {issue.volumeNumber ? ` · Vol ${issue.volumeNumber}` : ''}
+            {issue.slotNumber ? `, No ${issue.slotNumber}` : ''}
           </div>
           <h3 className="issue-card-title" style={{ fontSize: 16 }}>
             <a href={`/issues/${issue.id}`}>{issue.title}</a>
@@ -42,19 +45,48 @@ function cardHtml(issue: Issue) {
 }
 
 export default function ArchiveClient() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
-  const [year, setYear] = useState('');
+  const [years, setYears] = useState<PublicationYear[]>([]);
+  const [yearId, setYearId] = useState('');
+  const [volumes, setVolumes] = useState<Volume[]>([]);
+  const [volumeId, setVolumeId] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categorySlug, setCategorySlug] = useState(searchParams.get('category') || '');
   const [language, setLanguage] = useState('');
   const [issues, setIssues] = useState<Issue[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetch('/api/years')
+      .then((r) => r.json())
+      .then((data) => setYears(data.years || []));
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((data) => setCategories(data.categories || []));
+  }, []);
+
+  useEffect(() => {
+    setVolumeId('');
+    if (!yearId) {
+      setVolumes([]);
+      return;
+    }
+    fetch(`/api/volumes?yearId=${yearId}`)
+      .then((r) => r.json())
+      .then((data) => setVolumes(data.volumes || []));
+  }, [yearId]);
+
+  useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    if (year) params.set('year', year);
+    const year = years.find((y) => y.id === yearId)?.year;
+    if (year) params.set('year', String(year));
+    if (volumeId) params.set('volumeId', volumeId);
+    if (categorySlug) params.set('categorySlug', categorySlug);
     if (language) params.set('language', language);
     params.set('pageSize', '48');
 
@@ -67,11 +99,13 @@ export default function ArchiveClient() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [search, year, language]);
+  }, [search, yearId, volumeId, categorySlug, language, years]);
 
   function resetFilters() {
     setSearch('');
-    setYear('');
+    setYearId('');
+    setVolumeId('');
+    setCategorySlug('');
     setLanguage('');
   }
 
@@ -79,7 +113,7 @@ export default function ArchiveClient() {
     <div className="container">
       <div className="search-panel">
         <div className="row g-3 align-items-end">
-          <div className="col-lg-5 col-md-6 col-12">
+          <div className="col-lg-4 col-md-6 col-12">
             <label className="form-label" htmlFor="search-input">
               Search by title or keyword
             </label>
@@ -95,20 +129,57 @@ export default function ArchiveClient() {
               />
             </div>
           </div>
-          <div className="col-lg-3 col-md-6 col-6">
+          <div className="col-lg-2 col-md-6 col-6">
             <label className="form-label" htmlFor="filter-year">
               Year
             </label>
-            <input
-              type="text"
-              id="filter-year"
-              className="form-control"
-              placeholder="e.g. 2026"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-            />
+            <select id="filter-year" className="form-select" value={yearId} onChange={(e) => setYearId(e.target.value)}>
+              <option value="">All Years</option>
+              {years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.year}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="col-lg-4 col-md-6 col-6">
+          <div className="col-lg-2 col-md-6 col-6">
+            <label className="form-label" htmlFor="filter-volume">
+              Volume
+            </label>
+            <select
+              id="filter-volume"
+              className="form-select"
+              value={volumeId}
+              onChange={(e) => setVolumeId(e.target.value)}
+              disabled={!yearId}
+            >
+              <option value="">All Volumes</option>
+              {volumes.map((v) => (
+                <option key={v.id} value={v.id}>
+                  Volume {v.volumeNumber}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-lg-2 col-md-6 col-6">
+            <label className="form-label" htmlFor="filter-category">
+              Category
+            </label>
+            <select
+              id="filter-category"
+              className="form-select"
+              value={categorySlug}
+              onChange={(e) => setCategorySlug(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-lg-2 col-md-6 col-6">
             <label className="form-label" htmlFor="filter-language">
               Language
             </label>

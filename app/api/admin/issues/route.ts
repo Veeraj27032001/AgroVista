@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   const issue = await createIssue({
     slotId: isSpecialEdition ? null : slotId,
     volumeId,
+    categoryId: (form.get('categoryId') as string) || null,
     isSpecialEdition,
     title,
     description: (form.get('description') as string) || undefined,

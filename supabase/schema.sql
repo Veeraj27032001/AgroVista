@@ -48,10 +48,18 @@ create table if not exists issue_slots (
   unique (volume_id, slot_number)
 );
 
+create table if not exists categories (
+  id         uuid primary key default gen_random_uuid(),
+  name       text unique not null,
+  slug       text unique not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists issues (
   id                 uuid primary key default gen_random_uuid(),
   slot_id            uuid references issue_slots(id) on delete set null,
   volume_id          uuid references volumes(id) on delete set null,
+  category_id        uuid references categories(id) on delete set null,
   is_special_edition boolean not null default false,
   title              text not null,
   description        text,
@@ -66,6 +74,10 @@ create table if not exists issues (
   published_at       timestamptz,
   created_at         timestamptz not null default now()
 );
+
+-- Safe to re-run: adds category_id to an `issues` table that already existed
+-- before this column was introduced (the CREATE TABLE above is a no-op then).
+alter table issues add column if not exists category_id uuid references categories(id) on delete set null;
 
 create table if not exists subscription_plans (
   id                uuid primary key default gen_random_uuid(),
@@ -202,6 +214,7 @@ create table if not exists submission_versions (
 create index if not exists idx_issues_status on issues (status);
 create index if not exists idx_issues_slot_id on issues (slot_id);
 create index if not exists idx_issues_volume_id on issues (volume_id);
+create index if not exists idx_issues_category_id on issues (category_id);
 create index if not exists idx_subscriptions_user_id on subscriptions (user_id);
 create index if not exists idx_subscriptions_status on subscriptions (status);
 create index if not exists idx_issue_orders_user_id on issue_orders (user_id);
@@ -211,6 +224,7 @@ create index if not exists idx_submissions_status on article_submissions (status
 create index if not exists idx_coupon_usages_user_coupon on coupon_usages (user_id, coupon_id);
 
 alter table users enable row level security;
+alter table categories enable row level security;
 alter table publication_years enable row level security;
 alter table volumes enable row level security;
 alter table issue_slots enable row level security;

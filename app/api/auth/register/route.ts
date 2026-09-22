@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { config } from '@/lib/config';
 import { hashPassword, signSessionToken, SESSION_COOKIE_MAX_AGE_SECONDS } from '@/lib/auth';
-import { createUser, findUserByEmail } from '@/lib/db/users';
+import { createUser, findUserByEmail, findUserByPhone } from '@/lib/db/users';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -25,6 +25,13 @@ export async function POST(req: NextRequest) {
   const existing = await findUserByEmail(email);
   if (existing) {
     return NextResponse.json({ error: 'email_taken', message: 'An account with this email already exists.' }, { status: 409 });
+  }
+
+  if (phone) {
+    const existingPhone = await findUserByPhone(String(phone).trim());
+    if (existingPhone) {
+      return NextResponse.json({ error: 'phone_taken', message: 'An account with this phone number already exists.' }, { status: 409 });
+    }
   }
 
   const passwordHash = await hashPassword(password);

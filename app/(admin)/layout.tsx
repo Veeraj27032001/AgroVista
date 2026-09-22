@@ -4,6 +4,8 @@ import { findUserById } from '@/lib/db/users';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAdminOrRedirect();
   const user = await findUserById(session.userId);
