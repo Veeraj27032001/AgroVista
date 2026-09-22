@@ -2,6 +2,7 @@
 // Run with: npm run setup:buckets
 
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -11,7 +12,11 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+// Node 20 has no native WebSocket; the SDK's realtime client needs one to construct.
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+  realtime: { transport: WebSocket }
+});
 
 const BUCKETS = [
   { name: process.env.SUPABASE_POSTERS_BUCKET || 'issue-posters', public: true },

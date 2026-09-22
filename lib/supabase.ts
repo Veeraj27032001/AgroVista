@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 import { config } from './config';
 
 // Server-only admin client using the service_role key. This bypasses Row Level
@@ -16,7 +17,11 @@ export function getSupabaseAdmin(): SupabaseClient {
     );
   }
   adminClient = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
+    // Node 20 has no native WebSocket (that lands in Node 22) — the realtime
+    // client the SDK initializes internally needs one to construct at all,
+    // even though this app never subscribes to realtime channels.
+    realtime: { transport: WebSocket as unknown as typeof globalThis.WebSocket }
   });
   return adminClient;
 }

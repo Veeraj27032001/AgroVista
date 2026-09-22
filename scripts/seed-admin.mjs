@@ -3,6 +3,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import WebSocket from 'ws';
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((arg, i, arr) => (arg.startsWith('--') ? [arg.slice(2), arr[i + 1]] : null)).filter(Boolean)
@@ -20,7 +21,10 @@ if (!args.email || !args.password) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+  realtime: { transport: WebSocket }
+});
 
 async function main() {
   const email = args.email.toLowerCase();

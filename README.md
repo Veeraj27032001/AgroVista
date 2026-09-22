@@ -34,7 +34,11 @@ Fill in `.env.local`:
 
 ## 2. Database
 
-Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL editor. It creates all 14 tables (`users`, `publication_years`, `volumes`, `issue_slots`, `issues`, `subscription_plans`, `subscriptions`, `issue_orders`, `return_requests`, `cart_items`, `coupons`, `coupon_usages`, `article_submissions`, `submission_versions`) with RLS enabled and no policies — every access goes through this app's server code via the service role key.
+[`supabase/schema.sql`](supabase/schema.sql) creates all 14 tables (`users`, `publication_years`, `volumes`, `issue_slots`, `issues`, `subscription_plans`, `subscriptions`, `issue_orders`, `return_requests`, `cart_items`, `coupons`, `coupon_usages`, `article_submissions`, `submission_versions`) with RLS enabled and no policies — every access goes through this app's server code via the service role key. Either paste it into the Supabase SQL editor, or, if you've also set `SUPABASE_DB_PASSWORD` (Project Settings → Database) in `.env.local`:
+
+```bash
+npm run apply:schema
+```
 
 ## 3. Storage buckets
 
