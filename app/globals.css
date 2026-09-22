@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-white text-ink;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-serif font-bold text-ink;
+}
+
+.status-pending { @apply bg-amber-100 text-amber-800; }
+.status-active,
+.status-paid,
+.status-delivered,
+.status-accepted,
+.status-published { @apply bg-green-100 text-green-800; }
+.status-expired,
+.status-cancelled,
+.status-failed,
+.status-rejected { @apply bg-red-100 text-red-800; }
+.status-processing,
+.status-out_for_delivery,
+.status-under_review,
+.status-resubmitted,
+.status-revision_requested,
+.status-return_requested,
+.status-refund_initiated,
+.status-refund_processing,
+.status-reissue_initiated,
+.status-new_copy_dispatched { @apply bg-blue-100 text-blue-800; }

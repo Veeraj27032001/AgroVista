@@ -1,223 +1,91 @@
-# AgroVista Monthly — Secure Pay-Per-Issue E-Magazine
+# AgroVista
 
-A monthly agriculture e-magazine site where readers:
+A full magazine platform on Next.js 16 (App Router) + Supabase (Postgres + Storage) + Razorpay: catalog (years → volumes → issue slots), subscriptions (with optional Razorpay Autopay/mandate renewal), one-time issue purchases, hard-copy order + return/refund management, coupons, an article submission → editorial review → publish pipeline, and a full admin panel — built from [`AgroVista_Planning.md`](AgroVista_Planning.md).
 
-1. **Sign in with just their email** (magic link — no passwords).
-2. **Pay once per issue via Razorpay** to unlock it, permanently, under that email.
-3. **Read it online in a protected viewer** — the PDF is never downloadable or
-   directly linkable; pages are streamed as individually watermarked images.
-4. Can sign back in with the **same email on any device** later and still see
-   everything they've purchased — access is tied to the email, not a device
-   or browser.
+The original Express/vanilla-JS pay-per-issue app this project started from is preserved under [`legacy-express-app/`](legacy-express-app/) for reference.
 
-This is a real client + server application (not a static site) because
-payments and access control have to be enforced server-side to mean anything.
+## Stack
 
----
+Next.js 16 · TypeScript · Tailwind CSS · Supabase Postgres + Storage · bcryptjs + JWT auth (role-based: `user`/`admin`) · Razorpay (orders, autopay mandates, refunds) · react-hook-form · react-hot-toast · lucide-react
 
-## ⚠️ Please read: what "protected" actually means here
+## Adapter layer (`lib/adapters/`)
 
-You asked for the PDF to not be downloadable, not viewable without payment,
-and not copyable. Here's exactly what this build does, and where the honest
-limits are:
+Storage, payments, and notifications (email + SMS) are each behind a small adapter interface, selected by env var, so the app runs with zero external services in `stub` mode (everything just logs to the console) until real credentials are wired in:
 
-**What's enforced (hard to bypass):**
-- The original PDF file is **never sent to the browser** at all — not even
-  to a paying reader. It lives only on the server.
-- What the reader's browser receives is a **freshly rendered PNG image of
-  one page at a time**, requested from an endpoint that checks (a) they're
-  logged in and (b) they've paid for that specific issue, on every single
-  request.
-- Every page image is **watermarked server-side, baked into the pixels**,
-  with the viewer's email + timestamp — so a leaked screenshot is traceable
-  to the account that produced it.
-- Right-click, drag-to-save, Ctrl+S/P, and printing are disabled in the
-  viewer.
-- Nothing is cached (`Cache-Control: no-store`), and images are served
-  `inline`, never as an attachment.
+| Env var | Values | Purpose |
+|---|---|---|
+| `STORAGE_ADAPTER` | `stub` \| `supabase` | Poster images, issue PDFs, submission files |
+| `PAYMENT_ADAPTER` | `stub` \| `razorpay` | Orders, autopay mandates, refunds |
+| `NOTIFIER_ADAPTER` | `stub` \| `email-sms` | Email always sends when active; SMS (Fast2SMS) stays off unless `SMS_NOTIFICATIONS_ENABLED=true` — email is the default channel |
+| `SENTRY_ENABLED` | `true` \| `false` | Error monitoring wrapper (`lib/adapters/monitoring.ts`) — currently logs to console; wire up `@sentry/nextjs` when ready |
 
-**What is NOT possible for anyone to guarantee, on the web, ever:**
-- Stopping a **screenshot or a phone photo of the screen**. If content is
-  visible on a screen, it can be captured by the device showing it. No
-  magazine, newspaper, or DRM'd e-book platform (including Kindle, Adobe
-  DRM, etc.) can truly prevent this either — they rely on the same
-  deterrents used here (no download, watermarking, disabled shortcuts) plus
-  legal terms of use.
-- Fully blocking browser dev tools or automated scripts from a technically
-  determined user. The deterrents here (disabling right-click/shortcuts)
-  stop casual copying, not a determined technical attacker.
-
-If your priority is legal enforceability rather than technical prevention,
-pair this with clear **Terms of Service** stating the content is licensed
-for personal viewing only and watermarking (already included) so leaks are
-traceable.
-
----
-
-## Project structure
-
-```
-agrovista-secure/
-├── server/                  ← Node.js/Express backend (run this)
-│   ├── server.js            ← app entrypoint
-│   ├── config.js            ← reads .env
-│   ├── db.js                ← purchases store (simple JSON file; swap for real DB in prod)
-│   ├── middleware/auth.js   ← session cookie (JWT) verification
-│   ├── routes/
-│   │   ├── auth.js          ← magic-link request + verify + /me + logout
-│   │   ├── issues.js        ← issue metadata (never exposes the PDF path)
-│   │   ├── payments.js      ← Razorpay order creation, verification, webhook
-│   │   └── viewer.js        ← the protected page-image endpoint
-│   ├── services/
-│   │   ├── email.js         ← sends the magic link (nodemailer)
-│   │   ├── razorpay.js      ← Razorpay order + signature verification
-│   │   └── pdfRender.js     ← PDF → watermarked page images (poppler + sharp)
-│   ├── data/
-│   │   ├── issues.json      ← your issue catalog (title, price, category, etc.)
-│   │   └── source-pdfs/     ← put your REAL PDF files here (never served directly)
-│   ├── cache/                (auto-generated rendered page images; safe to delete)
-│   ├── scripts/prerender.js ← pre-warms the image cache for every issue
-│   ├── package.json
-│   └── .env.example         ← copy to .env and fill in
-└── public/                  ← the front-end (served by the same server)
-    ├── index.html, archive.html, issue.html   (browse & buy)
-    ├── login.html, auth-callback.html          (email magic-link flow)
-    ├── viewer.html                              (the protected reader)
-    ├── css/, js/, fonts/, images/
-```
-
-## 1. Prerequisites
-
-- **Node.js 18+**
-- **poppler-utils** installed on the server (provides `pdftoppm`, used to
-  turn PDF pages into images):
-  - Ubuntu/Debian: `sudo apt-get install poppler-utils`
-  - macOS: `brew install poppler`
-  - Most cloud hosts (Render, Railway, a VPS, Docker) can install this with
-    one line in their build step / Dockerfile.
-- A **Razorpay account** (test mode is fine to start): https://dashboard.razorpay.com
-- An **SMTP account** to send the login email (Gmail app password, SendGrid,
-  Postmark, Amazon SES, Mailgun — any standard SMTP works). In development,
-  if you skip this, the magic link is just printed to your terminal (and
-  shown on the login page) so you can still test everything end-to-end.
-
-## 2. Install & configure
+## 1. Install & configure
 
 ```bash
-cd server
 npm install
-cp .env.example .env
+cp .env.local.example .env.local
 ```
 
-Edit `.env`:
+Fill in `.env.local`:
+- **Supabase** — `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` from Project Settings → API. The service role key is server-only and bypasses RLS; nothing in this app runs Supabase queries from the browser.
+- **Auth** — `JWT_SECRET` (generate with `openssl rand -hex 32`).
+- **Razorpay** — `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` from the dashboard, plus `RAZORPAY_WEBHOOK_SECRET` (step 5).
+- **Notifications** — Gmail App Password for SMTP; Fast2SMS API key if you want SMS later.
 
-- `BASE_URL` — where this app is reachable (e.g. `http://localhost:4000` for
-  local dev, or `https://magazine.yourdomain.com` in production).
-- `JWT_SECRET` — generate one with `openssl rand -hex 32`.
-- `SMTP_*` — your email provider's credentials.
-- `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` — from Razorpay Dashboard →
-  Settings → API Keys. Use the `rzp_test_...` keys while developing.
-- `RAZORPAY_WEBHOOK_SECRET` — see step 4 below.
+## 2. Database
 
-## 3. Add your real issues
+Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL editor. It creates all 14 tables (`users`, `publication_years`, `volumes`, `issue_slots`, `issues`, `subscription_plans`, `subscriptions`, `issue_orders`, `return_requests`, `cart_items`, `coupons`, `coupon_usages`, `article_submissions`, `submission_versions`) with RLS enabled and no policies — every access goes through this app's server code via the service role key.
 
-Two things per issue:
-
-1. **Metadata** — edit `server/data/issues.json`. Each entry looks like:
-   ```json
-   {
-     "id": "v3-i10-2026-10",
-     "year": 2026, "volume": 3, "issueNumber": 10,
-     "month": "October",
-     "title": "Your Real Article Title",
-     "category": "Technology",
-     "summary": "One or two sentences shown on cards.",
-     "cover": "images/covers/2026-10.jpg",
-     "price": 49,
-     "pages": 72,
-     "fileSize": "—",
-     "sourcePdf": "source-pdfs/v3-i10-2026-10.pdf",
-     "toc": ["Article 1", "Article 2", "Article 3"]
-   }
-   ```
-2. **The real PDF file** — drop it in `server/data/source-pdfs/`, named
-   exactly what `sourcePdf` says.
-
-Cover images referenced from `public/images/covers/` should be placed there
-(the starter kit ships with 33 sample issues using placeholder covers from
-placehold.co and tiny sample PDFs so you can test the whole flow immediately
-— replace both before going live).
-
-Run this any time after adding new PDFs so the first reader doesn't wait for
-conversion:
+## 3. Storage buckets
 
 ```bash
-npm run prerender
+npm run setup:buckets
 ```
 
-## 4. Configure Razorpay webhook (important — do this)
+Creates `issue-posters` (public), `issue-pdfs` (private), `submission-files` (private), `admin-edits` (private).
 
-The browser calls `/api/payments/verify` right after checkout, but if the
-browser closes/crashes before that finishes, you'd otherwise lose the sale.
-The webhook is the authoritative backup confirmation:
-
-1. Razorpay Dashboard → **Settings → Webhooks → Add New Webhook**.
-2. URL: `https://YOUR_DOMAIN/api/payments/webhook`
-3. Active events: check **`payment.captured`**.
-4. Copy the **Webhook Secret** it gives you into `.env` as
-   `RAZORPAY_WEBHOOK_SECRET`.
-
-## 5. Run it
+## 4. Create your first admin user
 
 ```bash
-cd server
-npm start
+npm run seed:admin -- --email you@example.com --password "Something8+" --name "Your Name"
 ```
 
-Visit `http://localhost:4000`. In dev mode (no SMTP configured) the login
-page will show the magic link directly on-screen so you don't need real
-email to test.
+Promotes the user to `role = 'admin'` if they already registered, or creates them directly.
 
-## 6. Deploy
+## 5. Razorpay webhook (for Autopay renewals)
 
-This is a normal Node.js app — deploy it anywhere that runs Node (a VPS,
-Render, Railway, Fly.io, etc.), as long as `poppler-utils` is installed on
-that machine (add it to your Dockerfile / build script). Point your domain's
-DNS at it, set `BASE_URL` to the real HTTPS URL, and switch Razorpay to live
-keys once you've tested with test keys.
+1. Dashboard → **Settings → Webhooks → Add New Webhook**.
+2. URL: `https://YOUR_DOMAIN/api/payment/webhook`
+3. Events: `subscription.charged`, `subscription.cancelled`, `subscription.halted`, `subscription.completed`.
+4. Copy the **Webhook Secret** into `.env.local` as `RAZORPAY_WEBHOOK_SECRET`.
 
-**Production checklist:**
-- Serve over **HTTPS** (required for secure cookies and by Razorpay live mode).
-- Set `NODE_ENV=production` so session cookies get the `secure` flag.
-- Swap `server/db.js`'s JSON-file storage for a real database (Postgres,
-  MySQL, etc.) once you expect concurrent traffic at scale — the function
-  signatures in that file are the only thing to reimplement.
-- Take regular backups of `server/data/purchases.json` (or your real DB) —
-  it's the only record of who has paid for what.
+## 6. Run it
 
-## How the pieces fit together (quick tour)
+```bash
+npm run dev
+```
 
-- **Sign in:** `login.html` → `POST /api/auth/request-link` → emails a
-  15-minute JWT link → `auth-callback.html` → `GET /api/auth/verify` → sets
-  an httpOnly session cookie good for 180 days → redirected back to where
-  they started.
-- **Buy an issue:** "Unlock & Read" button → `POST /api/payments/create-order`
-  (requires login; ties the order to that email) → Razorpay Checkout modal
-  opens → on success, `POST /api/payments/verify` checks the cryptographic
-  signature → purchase recorded against the email → redirected to
-  `viewer.html`. The webhook independently confirms the same payment
-  server-to-server as a safety net.
-- **Read an issue:** `viewer.html` → `GET /api/viewer/:id/meta` (401 if not
-  logged in, 402 if not purchased) → then one `<img>` per page pointing at
-  `GET /api/viewer/:id/page/:n`, each request re-checked against the
-  session + purchase record, each response a watermarked PNG that's never
-  cached or downloadable.
-- **Return later, any device:** sign in again with the same email → the
-  purchase record is keyed by email, not device/browser, so access follows
-  the reader automatically.
+Visit `http://localhost:3000`. Sign in at `/login` with your seeded admin account to reach `/admin`.
 
-## Customizing look & feel
+## How auth works
 
-All colors/fonts/spacing are CSS variables at the top of
-`public/css/style.css` (`:root { ... }`) — change `--primary-color`,
-`--custom-btn-bg-color`, etc. to re-theme the whole site from one place.
+Custom bcrypt + JWT — **not** Supabase Auth. `POST /api/auth/register` hashes the password (bcrypt, 12 rounds) and signs a JWT `{ userId, email, role }` into an httpOnly `agrovista_session` cookie (`JWT_EXPIRY_DAYS`, default 7). `proxy.ts` (Next 16's middleware convention) does a cheap cookie-presence redirect for `/admin`, `/account`, `/checkout`, `/submit-article` — the real signature + role check happens server-side via `getSession()`/`requireAdminOrRedirect()` on every protected page and route, since JWT verification needs Node's `crypto`, unavailable in Edge middleware.
+
+## How PDF access works
+
+No more watermarked page-streaming viewer (that was the old Express app's model). Per the plan: `GET /api/download/[id]` checks the caller has either a paid one-time order or an active subscription covering that issue's publish date, then returns a 15-minute Supabase Storage **signed URL** — the storage path itself is never exposed. This also means the app has no native-binary dependency (no poppler), so it deploys cleanly on plain Vercel serverless, unlike the old approach.
+
+## How Autopay works
+
+Choosing "Enable Autopay" on `/subscribe` creates a Razorpay **Plan** (cached on `subscription_plans.razorpay_plan_id`, created lazily on first use) and a mandate **Subscription**, and Checkout opens with `subscription_id` instead of `order_id`. Renewal charges arrive as `subscription.charged` webhook events, which extend `subscriptions.end_date` — no cron job needed. Turning off auto-renew (`/account/subscriptions`) cancels the Razorpay mandate but leaves current access untouched until `end_date`.
+
+## Known simplifications (given the scope of the full spec)
+
+- **Archive filters**: year is a free-text field rather than a derived dropdown; volume filtering isn't exposed in the archive UI (the API supports it via `volumeId`).
+- **Special edition / submission-publish forms**: take a raw Volume ID / Slot ID (copy from the admin Years & Volumes page URL) rather than a cascading picker.
+- **Cart checkout**: each cart line is paid via its own Razorpay Checkout (the plan's `create-order` API is one-order-per-item); a coupon entered at checkout applies to the first item paid.
+- **Sentry**: the monitoring wrapper exists and is env-gated, but `@sentry/nextjs` itself isn't installed — add it and fill in `lib/adapters/monitoring.ts` when you're ready to turn it on.
+
+## Deployment
+
+Standard Next.js app — no native binaries required, so it deploys on Vercel serverless as-is. Set every `.env.local` var in your host's environment config, point `NEXT_PUBLIC_APP_URL` at your real domain, and use live Razorpay keys once tested.
