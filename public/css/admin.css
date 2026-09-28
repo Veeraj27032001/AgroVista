@@ -45,3 +45,18 @@ ADMIN — scoped to /admin pages only
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(76,122,63,0.15);
 }
+.breadcrumb {
+  background: var(--white-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-small);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+.breadcrumb-item a {
+  color: var(--primary-color);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+.breadcrumb-item a:hover { color: var(--primary-dark-color); text-decoration: underline; }
+.breadcrumb-item.active { color: var(--dark-color); font-weight: var(--font-weight-bold); }
+.breadcrumb-item + .breadcrumb-item::before { color: var(--custom-btn-bg-color); }
