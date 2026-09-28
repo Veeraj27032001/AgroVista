@@ -30,7 +30,7 @@ export default function CartPage() {
   const subtotal = (lines || []).reduce((sum, l) => sum + l.price, 0);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
+    <div className="mx-auto max-w-3xl px-4 pb-12 pt-[150px]">
       <h1 className="mb-6 text-3xl font-bold">Your Cart</h1>
 
       {!lines ? (

@@ -5,7 +5,7 @@ import { createCategory, listCategories } from '@/lib/db/categories';
 export async function GET() {
   const session = await getSession();
   if (!session || session.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-  return NextResponse.json({ categories: await listCategories() });
+  return NextResponse.json({ categories: await listCategories(true) });
 }
 
 export async function POST(req: NextRequest) {

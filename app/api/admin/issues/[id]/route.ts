@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { deleteIssue, getIssue, updateIssue } from '@/lib/db/catalog';
+import { getIssue, setIssueActive, updateIssue } from '@/lib/db/catalog';
 import { uploadIssuePdf, uploadPoster } from '@/lib/storage';
 import { autoDeliverToHardCopySubscribers } from '@/lib/subscription';
 
@@ -35,6 +35,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (form.has('bothRate')) patch.bothRate = Number(form.get('bothRate'));
   if (form.has('couponApplicable')) patch.couponApplicable = form.get('couponApplicable') === 'true';
   if (form.has('status')) patch.status = form.get('status') === 'published' ? 'published' : 'draft';
+  if (form.has('isSpecialEdition')) patch.isSpecialEdition = form.get('isSpecialEdition') === 'true';
+  if (form.has('isActive')) patch.isActive = form.get('isActive') === 'true';
 
   const posterFile = form.get('poster') as File | null;
   if (posterFile && posterFile.size > 0) {
@@ -59,6 +61,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!session || session.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const { id } = await params;
-  await deleteIssue(id);
+  await setIssueActive(id, false);
   return NextResponse.json({ ok: true });
 }

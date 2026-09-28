@@ -1,22 +1,23 @@
 import '../globals.css';
 import { requireAdminOrRedirect } from '@/lib/auth';
-import { findUserById } from '@/lib/db/users';
+import Navbar from '@/components/public/Navbar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import AdminHeader from '@/components/admin/AdminHeader';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await requireAdminOrRedirect();
-  const user = await findUserById(session.userId);
+  await requireAdminOrRedirect();
 
   return (
-    <div className="flex min-h-screen">
-      <AdminSidebar />
-      <div className="flex-1">
-        {user && <AdminHeader user={user} />}
-        <main className="p-6">{children}</main>
+    <>
+      <link rel="stylesheet" href="/css/admin.css" />
+      <Navbar />
+      <div className="flex min-h-screen bg-paper pt-[90px]">
+        <AdminSidebar />
+        <div className="flex-1">
+          <main className="p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

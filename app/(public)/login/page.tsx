@@ -9,7 +9,14 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const googleError = searchParams.get('error');
+  const [error, setError] = useState(
+    googleError === 'google_email_unverified'
+      ? 'Your Google email is not verified. Please verify it with Google first.'
+      : googleError === 'google_failed'
+        ? 'Google sign-in failed. Please try again.'
+        : ''
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,6 +86,9 @@ function LoginForm() {
         <div className="auth-divider">
           <span>or</span>
         </div>
+        <a href={`/api/auth/google/start?redirect=${encodeURIComponent(redirect)}`} className="btn custom-btn custom-btn-secondary w-100 mb-2">
+          <i className="bi bi-google me-2"></i>Continue with Google
+        </a>
         <a href="/login-otp" className="btn custom-btn custom-btn-secondary w-100 mb-2">
           Sign in with a Code
         </a>

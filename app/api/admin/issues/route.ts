@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { createIssue, getSlot, listAllIssuesForAdmin, updateIssue } from '@/lib/db/catalog';
+import { createIssue, getSlot, listAllIssuesForAdmin, resolveSlotId, updateIssue } from '@/lib/db/catalog';
 import { uploadIssuePdf, uploadPoster } from '@/lib/storage';
 import { autoDeliverToHardCopySubscribers } from '@/lib/subscription';
 
@@ -20,19 +20,25 @@ export async function POST(req: NextRequest) {
   if (!title) return NextResponse.json({ error: 'missing_title' }, { status: 400 });
 
   const isSpecialEdition = form.get('isSpecialEdition') === 'true';
-  const slotId = (form.get('slotId') as string) || null;
+  let slotId = (form.get('slotId') as string) || null;
   let volumeId = (form.get('volumeId') as string) || null;
   const status = (form.get('status') as string) === 'published' ? 'published' : 'draft';
 
-  // Regular issues only submit a slotId, but listing/filtering joins through
-  // volume_id, so resolve and store it too — not just slot_id.
-  if (!isSpecialEdition && slotId) {
+  const year = form.get('year') ? Number(form.get('year')) : null;
+  const volumeNumber = form.get('volumeNumber') ? Number(form.get('volumeNumber')) : null;
+  const slotNumber = form.get('slotNumber') ? Number(form.get('slotNumber')) : null;
+  if (year && volumeNumber && slotNumber) {
+    slotId = await resolveSlotId({ year, volumeNumber, slotNumber });
+  }
+
+  // Listing/filtering joins through volume_id, so resolve and store it too — not just slot_id.
+  if (slotId) {
     const slot = await getSlot(slotId);
     volumeId = slot?.volumeId || null;
   }
 
   const issue = await createIssue({
-    slotId: isSpecialEdition ? null : slotId,
+    slotId,
     volumeId,
     categoryId: (form.get('categoryId') as string) || null,
     isSpecialEdition,

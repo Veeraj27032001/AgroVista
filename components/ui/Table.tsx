@@ -27,12 +27,12 @@ export default function Table<T extends { id: string }>({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto rounded-xl border border-primary/10 bg-white shadow-sm">
+      <table className="min-w-full divide-y divide-primary/10 text-sm">
+        <thead className="bg-primary-light">
           <tr>
             {columns.map((col) => (
-              <th key={col.key} className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-600">
+              <th key={col.key} className="whitespace-nowrap px-4 py-3 text-left font-semibold text-primary">
                 {col.header}
               </th>
             ))}
@@ -40,7 +40,7 @@ export default function Table<T extends { id: string }>({
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
           {data.map((row) => (
-            <tr key={row.id} className="hover:bg-gray-50">
+            <tr key={row.id} className="hover:bg-primary-light/40">
               {columns.map((col) => (
                 <td key={col.key} className="whitespace-nowrap px-4 py-3">
                   {col.render(row)}

@@ -48,7 +48,7 @@ export default function SubmitArticlePage() {
 
   if (done) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-24 text-center">
+      <div className="mx-auto max-w-lg px-4 pb-24 pt-[150px] text-center">
         <h1 className="text-2xl font-bold">Thanks for your submission!</h1>
         <p className="mt-2 text-gray-600">Our editorial team will review it and get back to you from your account&apos;s Submissions page.</p>
       </div>
@@ -56,7 +56,7 @@ export default function SubmitArticlePage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-12">
+    <div className="mx-auto max-w-xl px-4 pb-12 pt-[150px]">
       <h1 className="mb-6 text-3xl font-bold">Submit an Article</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Title" required value={title} onChange={(e) => setTitle(e.target.value)} />

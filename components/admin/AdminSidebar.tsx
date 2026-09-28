@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  CalendarRange,
   BookOpen,
-  Sparkles,
   Tag,
   CreditCard,
   Users,
@@ -19,9 +17,7 @@ import {
 
 const LINKS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/years', label: 'Years & Volumes', icon: CalendarRange },
   { href: '/admin/issues', label: 'Issues', icon: BookOpen },
-  { href: '/admin/special-editions', label: 'Special Editions', icon: Sparkles },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/plans', label: 'Plans', icon: CreditCard },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: Users },

@@ -26,6 +26,9 @@ const config: Config = {
       }
     }
   },
+  corePlugins: {
+    visibility: false
+  },
   plugins: []
 };
 

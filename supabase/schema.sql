@@ -5,19 +5,47 @@
 
 create extension if not exists pgcrypto;
 
+create table if not exists states (
+  id   uuid primary key default gen_random_uuid(),
+  name text unique not null
+);
+
+create table if not exists districts (
+  id       uuid primary key default gen_random_uuid(),
+  state_id uuid not null references states(id) on delete cascade,
+  name     text not null,
+  unique (state_id, name)
+);
+
+create table if not exists taluks (
+  id          uuid primary key default gen_random_uuid(),
+  district_id uuid not null references districts(id) on delete cascade,
+  name        text not null,
+  unique (district_id, name)
+);
+
 create table if not exists users (
   id            uuid primary key default gen_random_uuid(),
   name          text not null,
   email         text unique not null,
-  password_hash text not null,
+  password_hash text,
   phone         text,
   address       text,
+  state_id      uuid references states(id) on delete set null,
+  district_id   uuid references districts(id) on delete set null,
+  taluk_id      uuid references taluks(id) on delete set null,
   city          text,
-  state         text,
   pincode       text,
   role          text not null default 'user' check (role in ('user', 'admin')),
   created_at    timestamptz not null default now()
 );
+
+-- Safe to re-run against a users table that already existed with the old
+-- free-text state column, or without these columns at all.
+alter table users add column if not exists state_id uuid references states(id) on delete set null;
+alter table users add column if not exists district_id uuid references districts(id) on delete set null;
+alter table users add column if not exists taluk_id uuid references taluks(id) on delete set null;
+alter table users alter column password_hash drop not null;
 
 create table if not exists publication_years (
   id         uuid primary key default gen_random_uuid(),
@@ -52,8 +80,12 @@ create table if not exists categories (
   id         uuid primary key default gen_random_uuid(),
   name       text unique not null,
   slug       text unique not null,
+  is_active  boolean not null default true,
+  is_deleted boolean not null default false,
   created_at timestamptz not null default now()
 );
+alter table categories add column if not exists is_active boolean not null default true;
+alter table categories add column if not exists is_deleted boolean not null default false;
 
 create table if not exists issues (
   id                 uuid primary key default gen_random_uuid(),
@@ -71,6 +103,7 @@ create table if not exists issues (
   both_rate          numeric(10, 2),
   coupon_applicable  boolean not null default true,
   status             text not null default 'draft' check (status in ('draft', 'published')),
+  is_active          boolean not null default true,
   published_at       timestamptz,
   created_at         timestamptz not null default now()
 );
@@ -78,6 +111,7 @@ create table if not exists issues (
 -- Safe to re-run: adds category_id to an `issues` table that already existed
 -- before this column was introduced (the CREATE TABLE above is a no-op then).
 alter table issues add column if not exists category_id uuid references categories(id) on delete set null;
+alter table issues add column if not exists is_active boolean not null default true;
 
 create table if not exists subscription_plans (
   id                uuid primary key default gen_random_uuid(),

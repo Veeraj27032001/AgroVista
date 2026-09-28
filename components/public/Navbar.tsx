@@ -18,7 +18,9 @@ export default function Navbar() {
   const isHome = pathname === '/';
 
   useEffect(() => {
-    getSession().then(setSession);
+    getSession()
+      .then(setSession)
+      .catch(() => setSession({ authenticated: false }));
   }, []);
 
   return (
@@ -57,21 +59,45 @@ export default function Navbar() {
           </ul>
           <div className="ms-lg-3 mt-3 mt-lg-0 d-flex align-items-center gap-2">
             {session === null ? null : session.authenticated ? (
-              <>
-                <span className="me-2 small text-muted d-none d-lg-inline">{session.user?.name}</span>
-                {session.user?.role === 'admin' && (
-                  <a href="/admin" className="btn custom-btn custom-btn-secondary custom-btn-sm">
-                    Admin
-                  </a>
-                )}
+              <div className="dropdown">
                 <button
                   type="button"
-                  className="btn custom-btn custom-btn-secondary custom-btn-sm"
-                  onClick={() => logout()}
+                  className="btn custom-btn custom-btn-secondary custom-btn-sm dropdown-toggle"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
                 >
-                  Sign out
+                  <i className="bi bi-person-circle me-1"></i> {session.user?.name}
                 </button>
-              </>
+                <ul className="dropdown-menu dropdown-menu-end">
+                  <li className="px-3 py-1">
+                    <div className="small fw-semibold">{session.user?.name}</div>
+                    <div className="small text-muted text-truncate">{session.user?.email}</div>
+                  </li>
+                  <li>
+                    <hr className="dropdown-divider" />
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account">
+                      <i className="bi bi-person me-2"></i>Profile
+                    </a>
+                  </li>
+                  {session.user?.role === 'admin' && (
+                    <li>
+                      <a className="dropdown-item" href="/admin">
+                        <i className="bi bi-speedometer2 me-2"></i>Admin Dashboard
+                      </a>
+                    </li>
+                  )}
+                  <li>
+                    <hr className="dropdown-divider" />
+                  </li>
+                  <li>
+                    <button type="button" className="dropdown-item text-danger" onClick={() => logout()}>
+                      <i className="bi bi-box-arrow-right me-2"></i>Sign out
+                    </button>
+                  </li>
+                </ul>
+              </div>
             ) : (
               <a href="/login" className="btn custom-btn custom-btn-secondary custom-btn-sm">
                 Sign in

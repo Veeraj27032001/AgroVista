@@ -100,6 +100,11 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
       });
       const order = await res.json();
       if (!res.ok) {
+        if (order.error === 'incomplete_profile') {
+          toast.error(order.message);
+          window.location.href = `/account/edit?incomplete=1&redirect=${encodeURIComponent(window.location.pathname)}`;
+          return;
+        }
         toast.error(order.message || 'Could not start checkout.');
         setBusy(false);
         return;

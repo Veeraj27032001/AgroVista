@@ -29,8 +29,10 @@ export type User = {
   email: string;
   phone: string | null;
   address: string | null;
+  stateId: string | null;
+  districtId: string | null;
+  talukId: string | null;
   city: string | null;
-  state: string | null;
   pincode: string | null;
   role: Role;
   createdAt: string;
@@ -64,6 +66,7 @@ export type Category = {
   id: string;
   name: string;
   slug: string;
+  isActive: boolean;
 };
 
 export type Issue = {
@@ -81,6 +84,7 @@ export type Issue = {
   bothRate: number | null;
   couponApplicable: boolean;
   status: IssueStatus;
+  isActive: boolean;
   publishedAt: string | null;
   createdAt: string;
   /** Display-only, populated by listing/detail queries that join through volume/slot/category. */

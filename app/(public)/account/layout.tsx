@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   await requireUserOrRedirect();
-
   return (
-    <div className="min-h-screen bg-paper">
-      <div className="mx-auto max-w-4xl px-4 pb-12 pt-[150px] sm:px-8">{children}</div>
-    </div>
+    <>
+      <link rel="stylesheet" href="/css/profile.css" />
+      {children}
+    </>
   );
 }

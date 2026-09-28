@@ -3,7 +3,6 @@
 import { use, useEffect, useState } from 'react';
 import type { Issue } from '@/lib/types';
 import IssueForm from '@/components/admin/IssueForm';
-import Spinner from '@/components/ui/Spinner';
 
 export default function EditIssuePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -17,15 +16,17 @@ export default function EditIssuePage({ params }: { params: Promise<{ id: string
 
   if (!issue) {
     return (
-      <div className="flex justify-center py-16">
-        <Spinner />
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status"></div>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Edit Issue</h1>
+      <h1 className="mb-4" style={{ fontSize: 24 }}>
+        Edit Issue
+      </h1>
       <IssueForm existing={issue} onSaved={setIssue} />
     </div>
   );

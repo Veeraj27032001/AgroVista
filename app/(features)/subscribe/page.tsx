@@ -35,6 +35,11 @@ export default function SubscribePage() {
       });
       const order = await res.json();
       if (!res.ok) {
+        if (order.error === 'incomplete_profile') {
+          toast.error(order.message);
+          window.location.href = `/account/edit?incomplete=1&redirect=${encodeURIComponent('/subscribe')}`;
+          return;
+        }
         toast.error(order.message || 'Could not start checkout.');
         setBusyPlanId(null);
         return;
@@ -71,7 +76,7 @@ export default function SubscribePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div className="mx-auto max-w-6xl px-4 pb-12 pt-[150px]">
       <h1 className="mb-2 text-3xl font-bold">Subscription Plans</h1>
       <p className="mb-4 text-gray-600">Choose soft copy, hard copy, or both — every new issue delivered automatically for your plan period.</p>
 

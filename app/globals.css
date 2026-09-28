@@ -10,6 +10,14 @@ h1, h2, h3, h4, h5, h6 {
   @apply font-serif font-bold text-ink;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #201F17;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .status-pending { @apply bg-amber-100 text-amber-800; }
 .status-active,
 .status-paid,

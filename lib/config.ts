@@ -46,6 +46,11 @@ export const config = {
     smsEnabled: required('SMS_NOTIFICATIONS_ENABLED', 'false') === 'true'
   },
 
+  google: {
+    clientId: required('GOOGLE_CLIENT_ID', ''),
+    clientSecret: required('GOOGLE_CLIENT_SECRET', '')
+  },
+
   adapters: {
     storage: required('STORAGE_ADAPTER', 'stub') as 'stub' | 'supabase',
     payment: required('PAYMENT_ADAPTER', 'stub') as 'stub' | 'razorpay',

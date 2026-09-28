@@ -25,7 +25,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Dashboard</h1>
+      <h1 className="mb-6 font-serif text-2xl font-bold text-ink">Dashboard</h1>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Total Users" value={users.length} />
         <StatCard label="Active Subscriptions" value={activeSubscriptions} />
@@ -36,22 +36,22 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div>
-          <h2 className="mb-3 font-semibold">Recent Orders</h2>
+        <div className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-serif font-semibold text-ink">Recent Orders</h2>
           <div className="space-y-2">
             {orders.slice(0, 6).map((o) => (
-              <div key={o.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm">
+              <div key={o.id} className="flex items-center justify-between rounded-lg border border-primary/10 px-3 py-2 text-sm">
                 <span>₹{o.amount}</span>
                 <Badge label={o.orderStatus} />
               </div>
             ))}
           </div>
         </div>
-        <div>
-          <h2 className="mb-3 font-semibold">Recent Submissions</h2>
+        <div className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-serif font-semibold text-ink">Recent Submissions</h2>
           <div className="space-y-2">
             {submissions.slice(0, 6).map((s) => (
-              <div key={s.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm">
+              <div key={s.id} className="flex items-center justify-between rounded-lg border border-primary/10 px-3 py-2 text-sm">
                 <span className="truncate">{s.title}</span>
                 <Badge label={s.status} />
               </div>

@@ -8,7 +8,15 @@ export async function POST(req: NextRequest) {
   const { email, password } = body;
 
   const user = await findUserByEmail(String(email || ''));
-  const valid = user ? await comparePassword(String(password || ''), user.passwordHash) : false;
+
+  if (user && !user.passwordHash) {
+    return NextResponse.json(
+      { error: 'google_account', message: 'This account uses "Continue with Google". Sign in with Google instead.' },
+      { status: 401 }
+    );
+  }
+
+  const valid = user?.passwordHash ? await comparePassword(String(password || ''), user.passwordHash) : false;
 
   if (!user || !valid) {
     return NextResponse.json({ error: 'invalid_credentials', message: 'Incorrect email or password.' }, { status: 401 });

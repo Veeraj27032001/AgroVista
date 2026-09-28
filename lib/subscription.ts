@@ -3,6 +3,7 @@ import { getActiveSubscriptionForUser } from './db/subscriptions';
 import { hasSoftCopyAccess, createSubscriptionCoveredOrder } from './db/orders';
 import { listActiveHardCopySubscriptions } from './db/catalog';
 import { findUserById } from './db/users';
+import { getStateName } from './db/locations';
 import type { Issue } from './types';
 
 /**
@@ -35,6 +36,7 @@ export async function autoDeliverToHardCopySubscribers(issue: Issue): Promise<vo
   for (const sub of subs) {
     const user = await findUserById(sub.userId);
     if (!user) continue;
+    const deliveryState = user.stateId ? (await getStateName(user.stateId)) || undefined : undefined;
     await createSubscriptionCoveredOrder({
       userId: sub.userId,
       issueId: issue.id,
@@ -42,7 +44,7 @@ export async function autoDeliverToHardCopySubscribers(issue: Issue): Promise<vo
       deliveryName: user.name,
       deliveryAddress: user.address || undefined,
       deliveryCity: user.city || undefined,
-      deliveryState: user.state || undefined,
+      deliveryState,
       deliveryPincode: user.pincode || undefined,
       deliveryPhone: user.phone || undefined
     });

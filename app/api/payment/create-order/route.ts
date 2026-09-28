@@ -6,7 +6,8 @@ import { getPlan, updatePlan } from '@/lib/db/subscriptions';
 import { createPendingOrder } from '@/lib/db/orders';
 import { createSubscription } from '@/lib/db/subscriptions';
 import { validateCouponForPurchase } from '@/lib/coupons';
-import { findUserById } from '@/lib/db/users';
+import { findUserById, isProfileComplete } from '@/lib/db/users';
+import { getStateName } from '@/lib/db/locations';
 import { DURATION_LABEL_TO_MONTHS } from '@/lib/subscription';
 import type { Format } from '@/lib/types';
 
@@ -38,6 +39,13 @@ export async function POST(req: NextRequest) {
   const payment = getPaymentAdapter();
   const user = await findUserById(session.userId);
   if (!user) return NextResponse.json({ error: 'user_not_found' }, { status: 404 });
+
+  if (!isProfileComplete(user)) {
+    return NextResponse.json(
+      { error: 'incomplete_profile', message: 'Please complete your profile (phone, address, city, pincode, state, district, taluk) before ordering.' },
+      { status: 400 }
+    );
+  }
 
   if (type === 'issue') {
     if (!format) return NextResponse.json({ error: 'missing_format' }, { status: 400 });
@@ -72,6 +80,8 @@ export async function POST(req: NextRequest) {
       notes: { userId: session.userId, issueId: itemId, format }
     });
 
+    const deliveryState = user.stateId ? (await getStateName(user.stateId)) || undefined : undefined;
+
     await createPendingOrder({
       userId: session.userId,
       issueId: itemId,
@@ -83,7 +93,7 @@ export async function POST(req: NextRequest) {
       deliveryName: user.name,
       deliveryAddress: user.address || undefined,
       deliveryCity: user.city || undefined,
-      deliveryState: user.state || undefined,
+      deliveryState,
       deliveryPincode: user.pincode || undefined,
       deliveryPhone: user.phone || undefined
     });

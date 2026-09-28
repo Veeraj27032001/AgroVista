@@ -7,7 +7,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
-  const { name, email, password, phone, address, city, state, pincode } = body;
+  const { name, email, password, phone, address, city, stateId, districtId, talukId, pincode } = body;
 
   if (!name || typeof name !== 'string') {
     return NextResponse.json({ error: 'invalid_name', message: 'Please enter your name.' }, { status: 400 });
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await hashPassword(password);
-  const user = await createUser({ name, email, passwordHash, phone, address, city, state, pincode });
+  const user = await createUser({ name, email, passwordHash, phone, address, city, stateId, districtId, talukId, pincode });
 
   const token = signSessionToken({ userId: user.id, email: user.email, role: user.role });
   const res = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });

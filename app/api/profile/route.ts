@@ -7,8 +7,8 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { name, phone, address, city, state, pincode } = body;
+  const { name, phone, address, city, stateId, districtId, talukId, pincode } = body;
 
-  const user = await updateUserProfile(session.userId, { name, phone, address, city, state, pincode });
+  const user = await updateUserProfile(session.userId, { name, phone, address, city, stateId, districtId, talukId, pincode });
   return NextResponse.json({ user });
 }

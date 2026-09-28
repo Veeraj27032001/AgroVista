@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LocationSelects from '@/components/public/LocationSelects';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -10,7 +11,9 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
-  const [state, setState] = useState('');
+  const [stateId, setStateId] = useState('');
+  const [districtId, setDistrictId] = useState('');
+  const [talukId, setTalukId] = useState('');
   const [pincode, setPincode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +34,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, phone, address, city, state, pincode })
+        body: JSON.stringify({ name, email, password, phone, address, city, stateId, districtId, talukId, pincode })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -92,13 +95,9 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="col-md-6">
+          <div className="col-12">
             <label className="form-label mb-2">Phone</label>
             <input type="text" className="form-control" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label mb-2">Pincode</label>
-            <input type="text" className="form-control" value={pincode} onChange={(e) => setPincode(e.target.value)} />
           </div>
 
           <div className="col-12">
@@ -111,9 +110,20 @@ export default function RegisterPage() {
             <input type="text" className="form-control" value={city} onChange={(e) => setCity(e.target.value)} />
           </div>
           <div className="col-md-6">
-            <label className="form-label mb-2">State</label>
-            <input type="text" className="form-control" value={state} onChange={(e) => setState(e.target.value)} />
+            <label className="form-label mb-2">Pincode</label>
+            <input type="text" className="form-control" value={pincode} onChange={(e) => setPincode(e.target.value)} />
           </div>
+
+          <LocationSelects
+            stateId={stateId}
+            districtId={districtId}
+            talukId={talukId}
+            onChange={(next) => {
+              setStateId(next.stateId);
+              setDistrictId(next.districtId);
+              setTalukId(next.talukId);
+            }}
+          />
 
           <div className="col-12">
             <button type="submit" className="btn custom-btn w-100" disabled={busy}>
@@ -123,6 +133,12 @@ export default function RegisterPage() {
           </div>
         </form>
         <div className={`auth-status${error ? ' error' : ''}`}>{error}</div>
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+        <a href={`/api/auth/google/start?redirect=${encodeURIComponent('/')}`} className="btn custom-btn custom-btn-secondary w-100">
+          <i className="bi bi-google me-2"></i>Continue with Google
+        </a>
         <p className="mt-3 small text-muted text-center">
           Already have an account? <a href="/login">Sign in</a>
         </p>

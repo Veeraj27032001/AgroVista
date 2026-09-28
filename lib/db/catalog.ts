@@ -148,6 +148,50 @@ export async function listSlotsForVolume(volumeId: string): Promise<IssueSlot[]>
   return (data as SlotRow[]).map(toSlot);
 }
 
+/** Finds or creates the year/volume/slot chain for (year, volumeNumber, slotNumber) and returns the slot id. */
+export async function resolveSlotId(params: { year: number; volumeNumber: number; slotNumber: number }): Promise<string> {
+  const db = getSupabaseAdmin();
+
+  let { data: yearRow } = await db.from('publication_years').select('id').eq('year', params.year).maybeSingle();
+  if (!yearRow) {
+    const { data, error } = await db.from('publication_years').insert({ year: params.year }).select('id').single();
+    if (error) throw error;
+    yearRow = data;
+  }
+
+  let { data: volumeRow } = await db
+    .from('volumes')
+    .select('id')
+    .eq('year_id', yearRow!.id)
+    .eq('volume_number', params.volumeNumber)
+    .maybeSingle();
+  if (!volumeRow) {
+    const { data, error } = await db
+      .from('volumes')
+      .insert({ year_id: yearRow!.id, volume_number: params.volumeNumber })
+      .select('id')
+      .single();
+    if (error) throw error;
+    volumeRow = data;
+  }
+
+  const { data: slotRow } = await db
+    .from('issue_slots')
+    .select('id')
+    .eq('volume_id', volumeRow!.id)
+    .eq('slot_number', params.slotNumber)
+    .maybeSingle();
+  if (slotRow) return slotRow.id;
+
+  const { data: newSlot, error } = await db
+    .from('issue_slots')
+    .insert({ volume_id: volumeRow!.id, slot_number: params.slotNumber })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return newSlot.id;
+}
+
 export async function getSlot(id: string): Promise<IssueSlot | null> {
   const { data, error } = await getSupabaseAdmin().from('issue_slots').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
@@ -197,6 +241,7 @@ type IssueRow = {
   both_rate: number | null;
   coupon_applicable: boolean;
   status: 'draft' | 'published';
+  is_active: boolean;
   published_at: string | null;
   created_at: string;
 };
@@ -224,6 +269,7 @@ function toIssue(r: IssueRow | IssueRowWithMeta): Issue {
     bothRate: r.both_rate === null ? null : Number(r.both_rate),
     couponApplicable: r.coupon_applicable,
     status: r.status,
+    isActive: r.is_active,
     publishedAt: r.published_at,
     createdAt: r.created_at,
     volumeNumber: withMeta.volumes?.volume_number ?? null,
@@ -271,6 +317,7 @@ export async function listPublishedIssues(filters: IssueFilters = {}): Promise<{
       { count: 'exact' }
     )
     .eq('status', 'published')
+    .eq('is_active', true)
     .order('published_at', { ascending: false })
     .range(from, to);
 
@@ -321,6 +368,7 @@ export type CreateIssueParams = {
   bothRate?: number;
   couponApplicable?: boolean;
   status?: 'draft' | 'published';
+  isActive?: boolean;
 };
 
 export async function createIssue(params: CreateIssueParams): Promise<Issue> {
@@ -368,6 +416,7 @@ export async function updateIssue(id: string, params: Partial<CreateIssueParams>
     patch.status = params.status;
     if (params.status === 'published') patch.published_at = new Date().toISOString();
   }
+  if (params.isActive !== undefined) patch.is_active = params.isActive;
 
   const { data, error } = await getSupabaseAdmin().from('issues').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
@@ -376,6 +425,11 @@ export async function updateIssue(id: string, params: Partial<CreateIssueParams>
 
 export async function deleteIssue(id: string): Promise<void> {
   const { error } = await getSupabaseAdmin().from('issues').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function setIssueActive(id: string, isActive: boolean): Promise<void> {
+  const { error } = await getSupabaseAdmin().from('issues').update({ is_active: isActive }).eq('id', id);
   if (error) throw error;
 }
 
