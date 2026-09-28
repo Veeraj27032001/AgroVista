@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { Category, Issue } from '@/lib/types';
 
-export default function IssueForm({ existing, onSaved }: { existing?: Issue; onSaved: (issue: Issue) => void }) {
+export default function IssueForm({
+  existing,
+  onSaved,
+  formTitle
+}: {
+  existing?: Issue;
+  onSaved: (issue: Issue) => void;
+  formTitle: string;
+}) {
   const [year, setYear] = useState(existing?.year?.toString() || '');
   const [volumeNumber, setVolumeNumber] = useState(existing?.volumeNumber?.toString() || '');
   const [slotNumber, setSlotNumber] = useState(existing?.slotNumber?.toString() || '');
@@ -70,7 +78,10 @@ export default function IssueForm({ existing, onSaved }: { existing?: Issue; onS
   }
 
   return (
-    <form onSubmit={handleSubmit} className="admin-card" style={{ maxWidth: 720 }}>
+    <form onSubmit={handleSubmit} className="admin-card mx-auto" style={{ maxWidth: 720 }}>
+      <h1 className="mb-4" style={{ fontSize: 24 }}>
+        {formTitle}
+      </h1>
       {!existing && (
         <div className="row g-3 mb-3">
           <div className="col-4">

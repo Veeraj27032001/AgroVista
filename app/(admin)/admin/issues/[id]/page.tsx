@@ -22,12 +22,5 @@ export default function EditIssuePage({ params }: { params: Promise<{ id: string
     );
   }
 
-  return (
-    <div>
-      <h1 className="mb-4" style={{ fontSize: 24 }}>
-        Edit Issue
-      </h1>
-      <IssueForm existing={issue} onSaved={setIssue} />
-    </div>
-  );
+  return <IssueForm existing={issue} formTitle="Edit Issue" onSaved={setIssue} />;
 }

@@ -36,10 +36,10 @@ export default function NewCouponPage() {
 
   return (
     <div>
-      <h1 className="mb-4" style={{ fontSize: 24 }}>
-        New Coupon
-      </h1>
-      <form onSubmit={handleSubmit} className="admin-card" style={{ maxWidth: 520 }}>
+      <form onSubmit={handleSubmit} className="admin-card mx-auto" style={{ maxWidth: 520 }}>
+        <h1 className="mb-4" style={{ fontSize: 24 }}>
+          New Coupon
+        </h1>
         <div className="mb-3">
           <label className="form-label">Code</label>
           <input className="form-control" required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
