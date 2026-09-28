@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Coupon } from '@/lib/types';
-import Table, { type Column } from '@/components/ui/Table';
-import Button from '@/components/ui/Button';
+import BootstrapTable, { type BsColumn } from '@/components/admin/BootstrapTable';
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[] | null>(null);
@@ -32,32 +31,44 @@ export default function AdminCouponsPage() {
     load();
   }
 
-  const columns: Column<Coupon>[] = [
-    { key: 'code', header: 'Code', render: (c) => c.code },
-    { key: 'type', header: 'Type', render: (c) => c.discountType },
+  const columns: BsColumn<Coupon>[] = [
+    { key: 'code', header: 'Code', sortKey: 'code', render: (c) => <span className="fw-semibold">{c.code}</span> },
+    { key: 'type', header: 'Type', sortKey: 'discountType', render: (c) => c.discountType },
     { key: 'value', header: 'Value', render: (c) => (c.discountType === 'percent' ? `${c.discountValue}%` : `₹${c.discountValue}`) },
     { key: 'usage', header: 'Sub. Usage', render: (c) => c.subscriptionUsageType || '—' },
     { key: 'expiry', header: 'Expiry', render: (c) => c.expiryDate || 'Never' },
     {
       key: 'active',
-      header: 'Active',
+      header: 'Status',
       render: (c) => (
-        <Button size="sm" variant={c.isActive ? 'secondary' : 'primary'} onClick={() => toggle(c)}>
-          {c.isActive ? 'Deactivate' : 'Activate'}
-        </Button>
+        <div className="d-flex align-items-center gap-2">
+          <span className={`badge rounded-pill ${c.isActive ? 'text-bg-success' : 'text-bg-secondary'}`}>{c.isActive ? 'Active' : 'Inactive'}</span>
+          <button
+            type="button"
+            className={`btn custom-btn-sm ${c.isActive ? 'custom-btn-danger' : 'custom-btn custom-btn-secondary'}`}
+            onClick={() => toggle(c)}
+          >
+            {c.isActive ? 'Deactivate' : 'Activate'}
+          </button>
+        </div>
       )
     }
   ];
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Coupons</h1>
-        <Link href="/admin/coupons/new">
-          <Button>New Coupon</Button>
+      <div className="d-flex align-items-center justify-content-between mb-4">
+        <h1 className="mb-0" style={{ fontSize: 24 }}>
+          Coupons
+        </h1>
+        <Link href="/admin/coupons/new" className="btn custom-btn custom-btn-sm">
+          <i className="bi bi-plus-lg me-1"></i>New Coupon
         </Link>
       </div>
-      <Table columns={columns} data={coupons || []} loading={!coupons} />
+
+      <div className="admin-card">
+        <BootstrapTable columns={columns} data={coupons || []} loading={!coupons} searchKeys={['code', 'discountType']} />
+      </div>
     </div>
   );
 }

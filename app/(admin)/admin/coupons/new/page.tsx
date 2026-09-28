@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-import Button from '@/components/ui/Button';
 
 export default function NewCouponPage() {
   const [code, setCode] = useState('');
@@ -39,33 +36,46 @@ export default function NewCouponPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">New Coupon</h1>
-      <form onSubmit={handleSubmit} className="grid max-w-lg gap-4">
-        <Input label="Code" required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
-        <Select
-          label="Discount Type"
-          value={discountType}
-          onChange={(e) => setDiscountType(e.target.value)}
-          options={[
-            { value: 'flat', label: 'Flat (₹)' },
-            { value: 'percent', label: 'Percent (%)' }
-          ]}
-        />
-        <Input label="Discount Value" type="number" required value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
-        <Select
-          label="Subscription Usage Type"
-          placeholder="Issues only (not for subscriptions)"
-          value={subscriptionUsageType}
-          onChange={(e) => setSubscriptionUsageType(e.target.value)}
-          options={[
-            { value: 'one_time', label: 'One-time' },
-            { value: 'recurring', label: 'Recurring (every renewal)' }
-          ]}
-        />
-        <Input label="Expiry Date" type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
-        <Button type="submit" loading={busy} className="w-fit">
+      <h1 className="mb-4" style={{ fontSize: 24 }}>
+        New Coupon
+      </h1>
+      <form onSubmit={handleSubmit} className="admin-card" style={{ maxWidth: 520 }}>
+        <div className="mb-3">
+          <label className="form-label">Code</label>
+          <input className="form-control" required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Discount Type</label>
+          <select className="form-select" value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
+            <option value="flat">Flat (₹)</option>
+            <option value="percent">Percent (%)</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Discount Value</label>
+          <input type="number" className="form-control" required value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Subscription Usage Type</label>
+          <select className="form-select" value={subscriptionUsageType} onChange={(e) => setSubscriptionUsageType(e.target.value)}>
+            <option value="">Issues only (not for subscriptions)</option>
+            <option value="one_time">One-time</option>
+            <option value="recurring">Recurring (every renewal)</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Expiry Date</label>
+          <input type="date" className="form-control" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+        </div>
+
+        <button type="submit" className="btn custom-btn" disabled={busy}>
+          {busy && <span className="btn-spinner"></span>}
           Create Coupon
-        </Button>
+        </button>
       </form>
     </div>
   );
