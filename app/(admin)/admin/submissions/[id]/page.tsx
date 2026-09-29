@@ -3,12 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { ArticleSubmission, SubmissionVersion } from '@/lib/types';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import Textarea from '@/components/ui/Textarea';
-import Input from '@/components/ui/Input';
-import FileUpload from '@/components/ui/FileUpload';
-import Spinner from '@/components/ui/Spinner';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function AdminSubmissionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -91,8 +86,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
 
   if (!submission) {
     return (
-      <div className="flex justify-center py-16">
-        <Spinner />
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status"></div>
       </div>
     );
   }
@@ -100,17 +95,21 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const hasAdminEdit = versions.some((v) => v.isAdminEdit);
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{submission.title}</h1>
-        <Badge label={submission.status} />
+    <div className="admin-card mx-auto" style={{ maxWidth: 640 }}>
+      <div className="d-flex align-items-center justify-content-between mb-2">
+        <h1 className="mb-0" style={{ fontSize: 22 }}>
+          {submission.title}
+        </h1>
+        <StatusBadge status={submission.status} />
       </div>
-      <p className="mb-6 text-gray-600">{submission.description}</p>
+      <p className="text-muted mb-4">{submission.description}</p>
 
-      <h2 className="mb-2 font-semibold">Version History</h2>
-      <div className="mb-6 space-y-2">
+      <h2 className="mb-2" style={{ fontSize: 16, fontWeight: 700 }}>
+        Version History
+      </h2>
+      <div className="mb-4">
         {versions.map((v) => (
-          <div key={v.id} className="rounded-lg border border-gray-200 px-3 py-2 text-sm">
+          <div key={v.id} className="border rounded px-3 py-2 mb-2 small">
             v{v.versionNumber} — {v.submittedBy}
             {v.isAdminEdit ? ' (admin edit)' : ''} — {new Date(v.createdAt).toLocaleString()}
           </div>
@@ -118,44 +117,101 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       </div>
 
       {submission.status !== 'accepted' && (
-        <div className="mb-6 space-y-3 rounded-xl border border-gray-200 p-4">
-          <h3 className="font-semibold">Review</h3>
-          <Textarea label="Revision note" value={note} onChange={(e) => setNote(e.target.value)} />
-          <div className="flex gap-3">
-            <Button loading={busy} variant="secondary" onClick={sendReview}>
+        <div className="mb-4 p-3 border rounded">
+          <h3 style={{ fontSize: 15, fontWeight: 700 }} className="mb-3">
+            Review
+          </h3>
+          <div className="mb-3">
+            <label className="form-label">Revision note</label>
+            <textarea className="form-control" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          <div className="d-flex gap-2">
+            <button type="button" className="btn custom-btn custom-btn-secondary" disabled={busy} onClick={sendReview}>
+              {busy && <span className="btn-spinner"></span>}
               Request Revision
-            </Button>
-            <Button loading={busy} onClick={accept}>
+            </button>
+            <button type="button" className="btn custom-btn" disabled={busy} onClick={accept}>
+              {busy && <span className="btn-spinner"></span>}
               Accept Submission
-            </Button>
+            </button>
           </div>
         </div>
       )}
 
       {submission.status === 'accepted' && (
         <>
-          <div className="mb-6 space-y-3 rounded-xl border border-gray-200 p-4">
-            <h3 className="font-semibold">Upload Admin-Edited Version</h3>
-            <FileUpload label="Word File" accept=".doc,.docx" onChange={setEditWord} />
-            <FileUpload label="PDF File" accept=".pdf" onChange={setEditPdf} />
-            <Button loading={busy} onClick={uploadEdit}>
+          <div className="mb-4 p-3 border rounded">
+            <h3 style={{ fontSize: 15, fontWeight: 700 }} className="mb-3">
+              Upload Admin-Edited Version
+            </h3>
+            <div className="mb-3">
+              <label className="form-label">Word File</label>
+              <input type="file" className="form-control" accept=".doc,.docx" onChange={(e) => setEditWord(e.target.files?.[0] || null)} />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">PDF File</label>
+              <input type="file" className="form-control" accept=".pdf" onChange={(e) => setEditPdf(e.target.files?.[0] || null)} />
+            </div>
+            <button type="button" className="btn custom-btn" disabled={busy} onClick={uploadEdit}>
+              {busy && <span className="btn-spinner"></span>}
               Upload Edited Version
-            </Button>
+            </button>
           </div>
 
           {hasAdminEdit && (
-            <div className="space-y-3 rounded-xl border border-gray-200 p-4">
-              <h3 className="font-semibold">Publish as Issue</h3>
-              <Input label="Slot ID" value={publishForm.slotId} onChange={(e) => setPublishForm({ ...publishForm, slotId: e.target.value })} />
-              <Input label="Poster URL" value={publishForm.posterUrl} onChange={(e) => setPublishForm({ ...publishForm, posterUrl: e.target.value })} />
-              <div className="grid grid-cols-3 gap-3">
-                <Input label="Soft Rate" type="number" value={publishForm.softRate} onChange={(e) => setPublishForm({ ...publishForm, softRate: e.target.value })} />
-                <Input label="Hard Rate" type="number" value={publishForm.hardRate} onChange={(e) => setPublishForm({ ...publishForm, hardRate: e.target.value })} />
-                <Input label="Both Rate" type="number" value={publishForm.bothRate} onChange={(e) => setPublishForm({ ...publishForm, bothRate: e.target.value })} />
+            <div className="p-3 border rounded">
+              <h3 style={{ fontSize: 15, fontWeight: 700 }} className="mb-3">
+                Publish as Issue
+              </h3>
+              <div className="mb-3">
+                <label className="form-label">Slot ID</label>
+                <input
+                  className="form-control"
+                  value={publishForm.slotId}
+                  onChange={(e) => setPublishForm({ ...publishForm, slotId: e.target.value })}
+                />
               </div>
-              <Button loading={busy} onClick={publish}>
+              <div className="mb-3">
+                <label className="form-label">Poster URL</label>
+                <input
+                  className="form-control"
+                  value={publishForm.posterUrl}
+                  onChange={(e) => setPublishForm({ ...publishForm, posterUrl: e.target.value })}
+                />
+              </div>
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
+                  <label className="form-label">Soft Rate</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={publishForm.softRate}
+                    onChange={(e) => setPublishForm({ ...publishForm, softRate: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Hard Rate</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={publishForm.hardRate}
+                    onChange={(e) => setPublishForm({ ...publishForm, hardRate: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Both Rate</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={publishForm.bothRate}
+                    onChange={(e) => setPublishForm({ ...publishForm, bothRate: e.target.value })}
+                  />
+                </div>
+              </div>
+              <button type="button" className="btn custom-btn" disabled={busy} onClick={publish}>
+                {busy && <span className="btn-spinner"></span>}
                 Publish
-              </Button>
+              </button>
             </div>
           )}
         </>

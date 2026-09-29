@@ -5,10 +5,19 @@
 
 create extension if not exists pgcrypto;
 
-create table if not exists states (
+create table if not exists countries (
   id   uuid primary key default gen_random_uuid(),
   name text unique not null
 );
+insert into countries (name) values ('India') on conflict (name) do nothing;
+
+create table if not exists states (
+  id         uuid primary key default gen_random_uuid(),
+  country_id uuid references countries(id) on delete cascade,
+  name       text unique not null
+);
+alter table states add column if not exists country_id uuid references countries(id) on delete cascade;
+update states set country_id = (select id from countries where name = 'India') where country_id is null;
 
 create table if not exists districts (
   id       uuid primary key default gen_random_uuid(),

@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
-import Button from '@/components/ui/Button';
 
 const DURATION_LABELS = [
   { label: 'Quarterly', months: 3 },
@@ -42,33 +39,58 @@ export default function NewPlanPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">New Subscription Plan</h1>
-      <form onSubmit={handleSubmit} className="grid max-w-lg gap-4">
-        <Input label="Name" required value={name} onChange={(e) => setName(e.target.value)} />
-        <Select
-          label="Format"
-          value={format}
-          onChange={(e) => setFormat(e.target.value)}
-          options={[
-            { value: 'soft', label: 'Soft Copy' },
-            { value: 'hard', label: 'Hard Copy' },
-            { value: 'both', label: 'Both' }
-          ]}
-        />
-        <Select
-          label="Duration"
-          value={durationLabel}
-          onChange={(e) => setDurationLabel(e.target.value)}
-          options={DURATION_LABELS.map((d) => ({ value: d.label, label: d.label }))}
-        />
-        <Input label="Price (₹)" type="number" required value={price} onChange={(e) => setPrice(e.target.value)} />
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={couponApplicable} onChange={(e) => setCouponApplicable(e.target.checked)} className="accent-primary" />
-          Coupon applicable
-        </label>
-        <Button type="submit" loading={busy} className="w-fit">
+      <form onSubmit={handleSubmit} className="admin-card mx-auto" style={{ maxWidth: 480 }}>
+        <h1 className="mb-4" style={{ fontSize: 24 }}>
+          New Subscription Plan
+        </h1>
+
+        <div className="mb-3">
+          <label className="form-label">Name</label>
+          <input className="form-control" required value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Format</label>
+          <select className="form-select" value={format} onChange={(e) => setFormat(e.target.value)}>
+            <option value="soft">Soft Copy</option>
+            <option value="hard">Hard Copy</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Duration</label>
+          <select className="form-select" value={durationLabel} onChange={(e) => setDurationLabel(e.target.value)}>
+            {DURATION_LABELS.map((d) => (
+              <option key={d.label} value={d.label}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Price (₹)</label>
+          <input type="number" className="form-control" required value={price} onChange={(e) => setPrice(e.target.value)} />
+        </div>
+
+        <div className="form-check mb-3">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            id="plan-coupon"
+            checked={couponApplicable}
+            onChange={(e) => setCouponApplicable(e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="plan-coupon">
+            Coupon applicable
+          </label>
+        </div>
+
+        <button type="submit" className="btn custom-btn" disabled={busy}>
+          {busy && <span className="btn-spinner"></span>}
           Create Plan
-        </Button>
+        </button>
       </form>
     </div>
   );

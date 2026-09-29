@@ -3,11 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { IssueOrder, ReturnRequest } from '@/lib/types';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import Textarea from '@/components/ui/Textarea';
-import Input from '@/components/ui/Input';
-import Spinner from '@/components/ui/Spinner';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function AdminReturnDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -52,43 +48,54 @@ export default function AdminReturnDetailPage({ params }: { params: Promise<{ id
 
   if (!returnRequest) {
     return (
-      <div className="flex justify-center py-16">
-        <Spinner />
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg">
-      <h1 className="mb-4 text-2xl font-bold">Return Request</h1>
-      <div className="mb-4 rounded-xl border border-gray-200 p-4">
-        <p>
+    <div className="admin-card mx-auto" style={{ maxWidth: 520 }}>
+      <h1 className="mb-4" style={{ fontSize: 24 }}>
+        Return Request
+      </h1>
+      <div className="mb-4 p-3 rounded" style={{ background: 'var(--section-bg-color)' }}>
+        <p className="mb-1">
           <strong>Reason:</strong> {returnRequest.reason}
         </p>
-        <p className="mt-1">
-          <strong>Status:</strong> <Badge label={returnRequest.status} />
+        <p className="mb-1">
+          <strong>Status:</strong> <StatusBadge status={returnRequest.status} />
         </p>
         {order && (
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mb-0 text-muted small">
             Order amount: ₹{order.amount} · Format: {order.format}
           </p>
         )}
       </div>
 
       {returnRequest.status !== 'actioned' && (
-        <div className="space-y-4">
-          <Textarea label="Admin note / reject reason" value={adminNote} onChange={(e) => setAdminNote(e.target.value)} />
-          <Input label="Refund amount (₹)" type="number" value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} />
-          <div className="flex gap-3">
-            <Button loading={busy} onClick={() => act('reissue')}>
+        <div>
+          <div className="mb-3">
+            <label className="form-label">Admin note / reject reason</label>
+            <textarea className="form-control" rows={4} value={adminNote} onChange={(e) => setAdminNote(e.target.value)} />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Refund amount (₹)</label>
+            <input type="number" className="form-control" value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} />
+          </div>
+          <div className="d-flex gap-2">
+            <button type="button" className="btn custom-btn" disabled={busy} onClick={() => act('reissue')}>
+              {busy && <span className="btn-spinner"></span>}
               Reissue
-            </Button>
-            <Button loading={busy} onClick={() => act('refund')}>
+            </button>
+            <button type="button" className="btn custom-btn" disabled={busy} onClick={() => act('refund')}>
+              {busy && <span className="btn-spinner"></span>}
               Refund
-            </Button>
-            <Button loading={busy} variant="danger" onClick={() => act('reject')}>
+            </button>
+            <button type="button" className="btn custom-btn-danger" disabled={busy} onClick={() => act('reject')}>
+              {busy && <span className="btn-spinner"></span>}
               Reject
-            </Button>
+            </button>
           </div>
         </div>
       )}

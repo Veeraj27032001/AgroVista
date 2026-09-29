@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import type { SubscriptionWithUser } from '@/lib/db/subscriptions';
-import Table, { type Column } from '@/components/ui/Table';
-import Badge from '@/components/ui/Badge';
-import Select from '@/components/ui/Select';
+import BootstrapTable, { type BsColumn } from '@/components/admin/BootstrapTable';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function AdminSubscriptionsPage() {
   const [subs, setSubs] = useState<SubscriptionWithUser[] | null>(null);
@@ -18,28 +17,34 @@ export default function AdminSubscriptionsPage() {
 
   const filtered = (subs || []).filter((s) => !status || s.status === status);
 
-  const columns: Column<SubscriptionWithUser>[] = [
+  const columns: BsColumn<SubscriptionWithUser>[] = [
     { key: 'user', header: 'User', render: (s) => s.userEmail },
-    { key: 'format', header: 'Format', render: (s) => <span className="capitalize">{s.format}</span> },
+    { key: 'format', header: 'Format', render: (s) => <span className="text-capitalize">{s.format}</span> },
     { key: 'start', header: 'Start', render: (s) => s.startDate },
     { key: 'end', header: 'End', render: (s) => s.endDate },
-    { key: 'status', header: 'Status', render: (s) => <Badge label={s.status} /> },
+    { key: 'status', header: 'Status', render: (s) => <StatusBadge status={s.status} /> },
     { key: 'autoRenew', header: 'Auto-Renew', render: (s) => (s.autoRenew ? 'Yes' : 'No') }
   ];
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Subscriptions</h1>
-        <Select
-          placeholder="All statuses"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          options={['pending', 'active', 'expired', 'cancelled'].map((s) => ({ value: s, label: s }))}
-          className="w-48"
-        />
+      <div className="d-flex align-items-center justify-content-between mb-4">
+        <h1 className="mb-0" style={{ fontSize: 24 }}>
+          Subscriptions
+        </h1>
+        <select className="form-select" style={{ width: 200 }} value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">All statuses</option>
+          {['pending', 'active', 'expired', 'cancelled'].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
       </div>
-      <Table columns={columns} data={filtered} loading={!subs} />
+
+      <div className="admin-card">
+        <BootstrapTable columns={columns} data={filtered} loading={!subs} searchKeys={['userEmail', 'format']} />
+      </div>
     </div>
   );
 }

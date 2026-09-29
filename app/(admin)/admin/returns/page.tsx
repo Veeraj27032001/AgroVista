@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { ReturnRequestWithUser } from '@/lib/db/orders';
-import Table, { type Column } from '@/components/ui/Table';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import BootstrapTable, { type BsColumn } from '@/components/admin/BootstrapTable';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function AdminReturnsPage() {
   const [returns, setReturns] = useState<ReturnRequestWithUser[] | null>(null);
@@ -16,19 +15,17 @@ export default function AdminReturnsPage() {
       .then((data) => setReturns(data.returns || []));
   }, []);
 
-  const columns: Column<ReturnRequestWithUser>[] = [
+  const columns: BsColumn<ReturnRequestWithUser>[] = [
     { key: 'user', header: 'User', render: (r) => r.userEmail },
-    { key: 'reason', header: 'Reason', render: (r) => <span className="line-clamp-1 max-w-xs">{r.reason}</span> },
+    { key: 'reason', header: 'Reason', render: (r) => <span className="text-truncate d-inline-block" style={{ maxWidth: 260 }}>{r.reason}</span> },
     { key: 'date', header: 'Date', render: (r) => new Date(r.createdAt).toLocaleDateString() },
-    { key: 'status', header: 'Status', render: (r) => <Badge label={r.status} /> },
+    { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
     {
       key: 'actions',
       header: '',
       render: (r) => (
-        <Link href={`/admin/returns/${r.id}`}>
-          <Button size="sm" variant="secondary">
-            View
-          </Button>
+        <Link href={`/admin/returns/${r.id}`} className="btn custom-btn custom-btn-secondary custom-btn-sm">
+          View
         </Link>
       )
     }
@@ -36,8 +33,12 @@ export default function AdminReturnsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Return Requests</h1>
-      <Table columns={columns} data={returns || []} loading={!returns} />
+      <h1 className="mb-4" style={{ fontSize: 24 }}>
+        Return Requests
+      </h1>
+      <div className="admin-card">
+        <BootstrapTable columns={columns} data={returns || []} loading={!returns} searchKeys={['userEmail', 'reason']} />
+      </div>
     </div>
   );
 }

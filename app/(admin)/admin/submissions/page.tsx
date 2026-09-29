@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { SubmissionWithUser } from '@/lib/db/submissions';
-import Table, { type Column } from '@/components/ui/Table';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import BootstrapTable, { type BsColumn } from '@/components/admin/BootstrapTable';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function AdminSubmissionsPage() {
   const [submissions, setSubmissions] = useState<SubmissionWithUser[] | null>(null);
@@ -16,20 +15,18 @@ export default function AdminSubmissionsPage() {
       .then((data) => setSubmissions(data.submissions || []));
   }, []);
 
-  const columns: Column<SubmissionWithUser>[] = [
+  const columns: BsColumn<SubmissionWithUser>[] = [
     { key: 'user', header: 'User', render: (s) => s.userEmail },
-    { key: 'title', header: 'Title', render: (s) => s.title },
+    { key: 'title', header: 'Title', sortKey: 'title', render: (s) => s.title },
     { key: 'language', header: 'Language', render: (s) => s.language },
-    { key: 'status', header: 'Status', render: (s) => <Badge label={s.status} /> },
+    { key: 'status', header: 'Status', render: (s) => <StatusBadge status={s.status} /> },
     { key: 'date', header: 'Date', render: (s) => new Date(s.createdAt).toLocaleDateString() },
     {
       key: 'actions',
       header: '',
       render: (s) => (
-        <Link href={`/admin/submissions/${s.id}`}>
-          <Button size="sm" variant="secondary">
-            View
-          </Button>
+        <Link href={`/admin/submissions/${s.id}`} className="btn custom-btn custom-btn-secondary custom-btn-sm">
+          View
         </Link>
       )
     }
@@ -37,8 +34,12 @@ export default function AdminSubmissionsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Article Submissions</h1>
-      <Table columns={columns} data={submissions || []} loading={!submissions} />
+      <h1 className="mb-4" style={{ fontSize: 24 }}>
+        Article Submissions
+      </h1>
+      <div className="admin-card">
+        <BootstrapTable columns={columns} data={submissions || []} loading={!submissions} searchKeys={['userEmail', 'title']} />
+      </div>
     </div>
   );
 }

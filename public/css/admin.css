@@ -2,14 +2,22 @@
 ADMIN — scoped to /admin pages only
 -----------------------------------------*/
 .custom-btn-danger {
+  display: inline-block;
   background: transparent;
   border: 2px solid #C0392B;
+  border-radius: var(--border-radius-large);
   color: #C0392B !important;
+  font-size: var(--btn-font-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.4px;
+  padding: 12px 30px;
+  line-height: 1;
 }
 .custom-btn-danger:hover {
   background: #C0392B;
   color: var(--white-color) !important;
 }
+.custom-btn-danger.custom-btn-sm { padding: 8px 20px; font-size: 12px; }
 .admin-card {
   background: var(--white-color);
   border-radius: var(--border-radius-medium);
