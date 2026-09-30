@@ -31,7 +31,7 @@ export default function AdminBreadcrumbs() {
   if (crumbs.length <= 1) return null;
 
   return (
-    <nav aria-label="breadcrumb" className="mb-4">
+    <nav aria-label="breadcrumb" className="admin-breadcrumb-strip">
       <ol className="breadcrumb mb-0">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;

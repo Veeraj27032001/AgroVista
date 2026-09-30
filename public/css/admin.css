@@ -53,11 +53,15 @@ ADMIN — scoped to /admin pages only
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(76,122,63,0.15);
 }
+.admin-breadcrumb-strip {
+  background: rgba(255,255,255,0.98);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 24px;
+}
 .breadcrumb {
-  background: var(--white-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-small);
-  padding: 10px 16px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
   font-size: 13px;
 }
 .breadcrumb-item a {
@@ -68,3 +72,23 @@ ADMIN — scoped to /admin pages only
 .breadcrumb-item a:hover { color: var(--primary-dark-color); text-decoration: underline; }
 .breadcrumb-item.active { color: var(--dark-color); font-weight: var(--font-weight-bold); }
 .breadcrumb-item + .breadcrumb-item::before { color: var(--custom-btn-bg-color); }
+
+/* Collapsible admin sidebar */
+.admin-sidebar {
+  transition: width 0.2s ease;
+  overflow-x: hidden;
+}
+.admin-sidebar.collapsed { width: 64px !important; }
+.admin-sidebar.collapsed .admin-sidebar-label,
+.admin-sidebar.collapsed .admin-sidebar-brand-text { display: none; }
+.admin-sidebar-toggle {
+  background: transparent;
+  border: none;
+  color: var(--primary-color);
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.admin-sidebar-toggle:hover { background: var(--section-bg-color); }

@@ -13,13 +13,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <>
       <link rel="stylesheet" href="/css/admin.css" />
       <Navbar />
-      <div className="flex min-h-screen bg-paper pt-[90px]">
-        <AdminSidebar />
-        <div className="flex-1">
-          <main className="p-6">
-            <AdminBreadcrumbs />
-            {children}
-          </main>
+      <div className="pt-[90px]">
+        <AdminBreadcrumbs />
+        <div className="flex min-h-screen bg-paper">
+          <AdminSidebar />
+          <div className="flex-1">
+            <main className="p-6">{children}</main>
+          </div>
         </div>
       </div>
     </>
