@@ -1,4 +1,17 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getSession, type SessionResponse } from '@/lib/client/session';
+
 export default function Footer() {
+  const [session, setSession] = useState<SessionResponse | null>(null);
+
+  useEffect(() => {
+    getSession()
+      .then(setSession)
+      .catch(() => setSession({ authenticated: false }));
+  }, []);
+
   return (
     <footer className="site-footer">
       <div className="container">
@@ -24,6 +37,9 @@ export default function Footer() {
             </p>
             <p>
               <a href="/archive">Archive</a>
+            </p>
+            <p>
+              <a href="/submit-article">Submit Article</a>
             </p>
             <p className="mb-0">
               <a href="/#contact">Contact</a>
@@ -67,10 +83,21 @@ export default function Footer() {
           </div>
           <div className="col-lg-3 col-12 ms-lg-auto">
             <h5 className="mb-4">Your Account</h5>
-            <p>Sign in with your email to view purchased issues on any device.</p>
-            <a href="/login" className="btn custom-btn custom-btn-sm">
-              Sign In
-            </a>
+            {session?.authenticated ? (
+              <>
+                <p>Signed in as {session.user?.name}.</p>
+                <a href="/account" className="btn custom-btn custom-btn-sm">
+                  My Account
+                </a>
+              </>
+            ) : (
+              <>
+                <p>Sign in with your email to view purchased issues on any device.</p>
+                <a href="/login" className="btn custom-btn custom-btn-sm">
+                  Sign In
+                </a>
+              </>
+            )}
           </div>
         </div>
         <div className="footer-bottom d-flex flex-wrap justify-content-between">

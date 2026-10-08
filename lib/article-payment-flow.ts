@@ -2,6 +2,7 @@ import 'server-only';
 import { getSubmission, updateSubmissionStatus } from '@/lib/db/submissions';
 import { findContributionByOrderId, markContributionSuccess, sumSuccessfulContributions, updateSubmissionAmountPaid } from '@/lib/db/article-payments';
 import { notifyPartialPaymentReceived, notifyPaymentCompleted } from '@/lib/article-notifications';
+import { recordPaymentAndIssueInvoice } from '@/lib/invoice-flow';
 
 /**
  * Confirms an article-contribution payment by Razorpay order id — shared by
@@ -20,6 +21,17 @@ export async function confirmContributionByOrderId(orderId: string, paymentId: s
   const confirmed = await markContributionSuccess(contribution.id, paymentId);
   const totalPaid = await sumSuccessfulContributions(submission.id);
   await updateSubmissionAmountPaid(submission.id, totalPaid);
+
+  await recordPaymentAndIssueInvoice({
+    purpose: 'article_contribution',
+    amountRupees: confirmed.amount,
+    razorpayOrderId: orderId,
+    razorpayPaymentId: paymentId,
+    productType: 'publication_charge',
+    description: `Publication charge contribution — ${submission.articleCode}`,
+    billedToName: confirmed.contributorName,
+    billedToEmail: confirmed.contributorEmail
+  });
 
   const charge = submission.publicationCharge || 0;
   if (totalPaid >= charge) {

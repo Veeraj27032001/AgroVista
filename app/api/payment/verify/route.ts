@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getPaymentAdapter } from '@/lib/adapters/payment';
 import { findOrderByRazorpayOrderId } from '@/lib/db/orders';
-import { findByRazorpayOrderId, findByRazorpaySubId, markSubscriptionActive, cancelOtherActiveSubscriptions } from '@/lib/db/subscriptions';
-import { recordCouponUsage } from '@/lib/db/coupons';
-import { confirmIssueOrderByRazorpayOrderId, confirmSubscriptionOrderByRazorpayOrderId } from '@/lib/issue-payment-flow';
+import { findByRazorpayOrderId, findByRazorpaySubId } from '@/lib/db/subscriptions';
+import {
+  confirmIssueOrderByRazorpayOrderId,
+  confirmMandateChargeBySubscriptionId,
+  confirmSubscriptionOrderByRazorpayOrderId
+} from '@/lib/issue-payment-flow';
 
 /**
  * POST /api/payment/verify  { type, orderId?, subscriptionId?, paymentId, signature }
@@ -43,11 +46,9 @@ export async function POST(req: NextRequest) {
     if (!pendingSub) return NextResponse.json({ error: 'order_not_found' }, { status: 404 });
     if (pendingSub.userId !== session.userId) return NextResponse.json({ error: 'order_user_mismatch' }, { status: 403 });
 
-    const sub = await markSubscriptionActive(pendingSub.id, paymentId);
-    await cancelOtherActiveSubscriptions(session.userId, sub.id);
-    if (sub.couponId) await recordCouponUsage({ couponId: sub.couponId, userId: session.userId, subId: sub.id });
-
-    return NextResponse.json({ ok: true, subscriptionId: sub.id });
+    const result = await confirmMandateChargeBySubscriptionId(subscriptionId, paymentId);
+    if (!result) return NextResponse.json({ ok: true, subscriptionId: pendingSub.id });
+    return NextResponse.json({ ok: true, ...result });
   }
 
   const valid = payment.verifyPaymentSignature({ orderId: orderId!, paymentId, signature });

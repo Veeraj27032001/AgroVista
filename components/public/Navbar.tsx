@@ -81,6 +81,16 @@ export default function Navbar() {
                       <i className="bi bi-person me-2"></i>Profile
                     </a>
                   </li>
+                  <li>
+                    <a className="dropdown-item" href="/submit-article">
+                      <i className="bi bi-file-earmark-text me-2"></i>Submit Article
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account/submissions">
+                      <i className="bi bi-journal-text me-2"></i>My Submissions
+                    </a>
+                  </li>
                   {session.user?.role === 'admin' && (
                     <li>
                       <a className="dropdown-item" href="/admin">
