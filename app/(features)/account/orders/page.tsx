@@ -44,6 +44,11 @@ export default function OrdersPage() {
                     </Button>
                   </Link>
                 )}
+                <Link href={`/account/help-requests/new?orderId=${order.id}`}>
+                  <Button size="sm" variant="secondary">
+                    Report a Problem
+                  </Button>
+                </Link>
               </div>
             </div>
           ))}

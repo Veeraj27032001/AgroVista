@@ -292,7 +292,7 @@ alter table article_submissions add constraint article_submissions_status_check 
   'draft', 'submitted', 'under_review',
   'revision_required', 'resubmitted',
   'accepted', 'rejected',
-  'payment_pending', 'partially_paid', 'payment_completed',
+  'payment_pending', 'partially_paid', 'payment_expired', 'payment_completed',
   'scheduled', 'published'
 ));
 
@@ -340,6 +340,8 @@ create table if not exists article_payments (
   status              text not null default 'pending' check (status in ('pending', 'success', 'failed')),
   created_at          timestamptz not null default now()
 );
+alter table article_payments drop constraint if exists article_payments_status_check;
+alter table article_payments add constraint article_payments_status_check check (status in ('pending', 'success', 'failed', 'expired'));
 
 -- Author <-> editorial communication thread, scoped to one article.
 create table if not exists article_messages (
@@ -384,3 +386,503 @@ alter table cart_items enable row level security;
 alter table coupon_usages enable row level security;
 alter table article_submissions enable row level security;
 alter table submission_versions enable row level security;
+
+-- =====================================================================
+-- V3 FOUNDATION — additive only. Nothing above is dropped or renamed, so
+-- every existing page/route keeps working unchanged. These tables/columns
+-- exist so the next phase can build the new money model, entitlements,
+-- shipments, invoicing, and status machines from AgriOxen_Functional_Specification.md
+-- without a breaking migration. Money in this section is stored as
+-- integer paise (₹1 = 100), per spec §1 — existing tables keep rupees.
+-- =====================================================================
+
+alter table users add column if not exists email_verified_at timestamptz;
+alter table users add column if not exists phone_verified_at timestamptz;
+alter table users add column if not exists google_id text unique;
+alter table users add column if not exists status text not null default 'active' check (status in ('active', 'disabled'));
+alter table users add column if not exists marketing_opt_in boolean not null default false;
+alter table users add column if not exists last_login_at timestamptz;
+
+create table if not exists addresses (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references users(id) on delete cascade,
+  label           text,
+  recipient_name  text not null,
+  recipient_phone text not null,
+  line1           text not null,
+  line2           text,
+  landmark        text,
+  city            text not null,
+  district        text not null,
+  state_id        uuid not null references states(id),
+  pincode         text not null,
+  is_default      boolean not null default false,
+  deleted_at      timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+create index if not exists idx_addresses_user on addresses (user_id);
+
+create table if not exists otp_codes (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references users(id) on delete cascade,
+  channel     text not null check (channel in ('email', 'sms')),
+  destination text not null,
+  purpose     text not null check (purpose in ('login', 'verify_email', 'verify_phone')),
+  code_hash   text not null,
+  attempts    integer not null default 0,
+  expires_at  timestamptz not null,
+  used_at     timestamptz,
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_otp_codes_user on otp_codes (user_id);
+
+create table if not exists password_reset_tokens (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references users(id) on delete cascade,
+  token_hash text not null,
+  expires_at timestamptz not null,
+  used_at    timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_password_reset_tokens_user on password_reset_tokens (user_id);
+
+-- issues: new publishing/pricing/stock fields (★ in spec §3.2). Existing
+-- status/soft_copy_rate/etc. columns are untouched and still drive the
+-- current catalog pages until the next phase switches them over.
+alter table issues add column if not exists sequence integer;
+alter table issues add column if not exists publish_status text not null default 'draft' check (publish_status in ('draft', 'scheduled', 'published'));
+alter table issues add column if not exists publish_at timestamptz;
+alter table issues add column if not exists digital_available boolean not null default true;
+alter table issues add column if not exists digital_price_paise integer;
+alter table issues add column if not exists digital_file_key text;
+alter table issues add column if not exists page_count integer;
+alter table issues add column if not exists preview_pages integer not null default 4;
+alter table issues add column if not exists print_available boolean not null default false;
+alter table issues add column if not exists print_price_paise integer;
+alter table issues add column if not exists print_stock_total integer not null default 0;
+alter table issues add column if not exists print_stock_reserved_subs integer not null default 0;
+alter table issues add column if not exists print_stock_sold integer not null default 0;
+alter table issues add column if not exists bundle_price_paise integer;
+alter table issues add column if not exists included_in_subscription boolean not null default true;
+create unique index if not exists idx_issues_sequence on issues (sequence) where sequence is not null;
+
+-- Entitlements: the single source of truth for "can this user read this issue".
+create table if not exists entitlements (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references users(id) on delete cascade,
+  issue_id        uuid not null references issues(id) on delete cascade,
+  source          text not null check (source in ('purchase', 'subscription', 'subscription_archive', 'admin_grant')),
+  order_item_id   uuid,
+  subscription_id uuid,
+  granted_by      uuid references users(id),
+  status          text not null default 'active' check (status in ('active', 'revoked')),
+  granted_at      timestamptz not null default now(),
+  revoked_at      timestamptz,
+  revoke_reason   text
+);
+create index if not exists idx_entitlements_user_issue on entitlements (user_id, issue_id);
+create index if not exists idx_entitlements_status on entitlements (status);
+
+-- Orders v2 (paise, multi-item). Runs alongside the existing issue_orders
+-- table — nothing reads from this yet until checkout is rebuilt against it.
+create table if not exists orders (
+  id                    uuid primary key default gen_random_uuid(),
+  order_number          text unique not null,
+  user_id               uuid not null references users(id) on delete cascade,
+  payment_status        text not null default 'pending' check (payment_status in ('pending', 'paid', 'failed', 'expired', 'partially_refunded', 'refunded')),
+  has_digital           boolean not null default false,
+  has_print             boolean not null default false,
+  subtotal_paise        integer not null default 0,
+  discount_total_paise  integer not null default 0,
+  shipping_fee_paise    integer not null default 0,
+  tax_total_paise       integer not null default 0,
+  grand_total_paise     integer not null default 0,
+  coupon_id             uuid references coupons(id),
+  coupon_code_snapshot  text,
+  billing_name          text,
+  billing_email         text,
+  billing_phone         text,
+  billing_gstin         text,
+  billing_state_id      uuid references states(id),
+  razorpay_order_id     text unique,
+  expires_at            timestamptz,
+  paid_at               timestamptz,
+  cancelled_at          timestamptz,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
+);
+create index if not exists idx_orders_user on orders (user_id);
+create index if not exists idx_orders_payment_status on orders (payment_status);
+
+create table if not exists order_items (
+  id                    uuid primary key default gen_random_uuid(),
+  order_id              uuid not null references orders(id) on delete cascade,
+  issue_id              uuid not null references issues(id),
+  format                text not null check (format in ('digital', 'print', 'bundle')),
+  title_snapshot        text not null,
+  unit_price_paise      integer not null,
+  quantity              integer not null default 1,
+  discount_amount_paise integer not null default 0,
+  tax_rate_snapshot     numeric(5, 2) not null default 0,
+  tax_amount_paise      integer not null default 0,
+  line_total_paise      integer not null,
+  digital_access        text check (digital_access in ('none', 'granted', 'revoked')),
+  refunded_quantity      integer not null default 0
+);
+create index if not exists idx_order_items_order on order_items (order_id);
+
+create table if not exists shipments (
+  id                      uuid primary key default gen_random_uuid(),
+  shipment_number         text unique not null,
+  source                  text not null check (source in ('order', 'subscription', 'replacement')),
+  order_id                uuid references orders(id),
+  subscription_issue_id   uuid,
+  replaces_shipment_id    uuid references shipments(id),
+  issue_id                uuid references issues(id),
+  recipient_name          text,
+  recipient_phone         text,
+  line1                   text,
+  line2                   text,
+  landmark                text,
+  city                    text,
+  district                text,
+  state_id                uuid references states(id),
+  pincode                 text,
+  status                  text not null default 'awaiting_dispatch' check (status in (
+    'awaiting_dispatch', 'packed', 'shipped', 'delivered', 'cancelled', 'delivery_failed', 'returned_to_sender'
+  )),
+  courier_name            text,
+  tracking_number         text,
+  tracking_url            text,
+  expected_delivery_date  date,
+  packed_at               timestamptz,
+  shipped_at              timestamptz,
+  delivered_at            timestamptz,
+  cancelled_at            timestamptz,
+  failure_reason          text,
+  created_at              timestamptz not null default now()
+);
+create index if not exists idx_shipments_order on shipments (order_id);
+create index if not exists idx_shipments_status on shipments (status);
+
+create table if not exists shipment_items (
+  id            uuid primary key default gen_random_uuid(),
+  shipment_id   uuid not null references shipments(id) on delete cascade,
+  issue_id      uuid not null references issues(id),
+  quantity      integer not null default 1,
+  order_item_id uuid references order_items(id)
+);
+
+create table if not exists shipment_events (
+  id            uuid primary key default gen_random_uuid(),
+  shipment_id   uuid not null references shipments(id) on delete cascade,
+  status        text not null,
+  note          text,
+  actor_user_id uuid references users(id),
+  occurred_at   timestamptz not null default now()
+);
+create index if not exists idx_shipment_events_shipment on shipment_events (shipment_id);
+
+create table if not exists shipping_rules (
+  id          uuid primary key default gen_random_uuid(),
+  scope       text not null check (scope in ('default', 'state')),
+  state_id    uuid references states(id),
+  fee_paise   integer not null default 0,
+  free_above_paise integer,
+  is_active   boolean not null default true
+);
+
+-- Subscriptions v2 additions (terms, allocations). New fields on the
+-- existing subscription_plans/subscriptions tables are additive; the
+-- current simpler subscription flow keeps working on the old columns.
+alter table subscription_plans add column if not exists format text check (format in ('digital', 'print', 'both'));
+alter table subscription_plans add column if not exists issues_per_term integer;
+alter table subscription_plans add column if not exists price_paise integer;
+alter table subscription_plans add column if not exists billing_type text check (billing_type in ('one_time', 'autopay', 'both'));
+alter table subscription_plans add column if not exists autopay_interval_months integer;
+alter table subscription_plans add column if not exists includes_archive boolean not null default false;
+alter table subscription_plans add column if not exists sort_order integer not null default 0;
+
+alter table subscriptions add column if not exists subscription_number text unique;
+alter table subscriptions add column if not exists plan_name_snapshot text;
+alter table subscriptions add column if not exists issues_per_term_snapshot integer;
+alter table subscriptions add column if not exists price_snapshot_paise integer;
+alter table subscriptions add column if not exists includes_archive_snapshot boolean;
+alter table subscriptions add column if not exists billing_type text check (billing_type in ('one_time', 'autopay'));
+alter table subscriptions add column if not exists issues_remaining integer not null default 0;
+alter table subscriptions add column if not exists issues_allocated integer not null default 0;
+alter table subscriptions add column if not exists first_issue_id uuid references issues(id);
+alter table subscriptions add column if not exists last_issue_id uuid references issues(id);
+alter table subscriptions add column if not exists autopay_enabled boolean not null default false;
+alter table subscriptions add column if not exists next_charge_at timestamptz;
+alter table subscriptions add column if not exists grace_until timestamptz;
+alter table subscriptions add column if not exists cancel_reason text;
+
+create table if not exists subscription_terms (
+  id            uuid primary key default gen_random_uuid(),
+  subscription_id uuid not null references subscriptions(id) on delete cascade,
+  term_number   integer not null,
+  issues_added  integer not null,
+  amount_paise  integer not null,
+  payment_id    uuid,
+  status        text not null default 'pending' check (status in ('pending', 'paid', 'failed', 'refunded')),
+  paid_at       timestamptz,
+  unique (subscription_id, term_number)
+);
+
+create table if not exists subscription_issues (
+  id              uuid primary key default gen_random_uuid(),
+  subscription_id uuid not null references subscriptions(id) on delete cascade,
+  issue_id        uuid not null references issues(id),
+  term_number     integer,
+  entitlement_id  uuid references entitlements(id),
+  shipment_id     uuid references shipments(id),
+  allocated_at    timestamptz not null default now(),
+  unique (subscription_id, issue_id)
+);
+
+-- Unified payments ledger (paise). Article contributions keep using the
+-- existing article_payments table for now; this covers orders/subscriptions.
+create table if not exists payments (
+  id                      uuid primary key default gen_random_uuid(),
+  user_id                 uuid references users(id),
+  purpose                 text not null check (purpose in ('order', 'subscription_term', 'article_contribution')),
+  order_id                uuid references orders(id),
+  subscription_term_id    uuid references subscription_terms(id),
+  article_contribution_id uuid,
+  amount_paise            integer not null,
+  razorpay_order_id       text,
+  razorpay_payment_id     text unique,
+  razorpay_subscription_id text,
+  method                  text,
+  status                  text not null default 'created' check (status in ('created', 'captured', 'failed', 'partially_refunded', 'refunded')),
+  failure_reason          text,
+  captured_at             timestamptz,
+  refunded_amount_paise   integer not null default 0,
+  created_at              timestamptz not null default now()
+);
+create index if not exists idx_payments_order on payments (order_id);
+
+create table if not exists refunds (
+  id                 uuid primary key default gen_random_uuid(),
+  payment_id         uuid not null references payments(id) on delete cascade,
+  amount_paise       integer not null,
+  reason             text not null check (reason in (
+    'order_cancelled', 'damaged', 'not_received', 'duplicate', 'access_failure',
+    'subscription_cancelled', 'article_withdrawn', 'article_rejected', 'overpayment', 'other'
+  )),
+  note               text,
+  support_request_id uuid,
+  razorpay_refund_id text,
+  status             text not null default 'pending' check (status in ('pending', 'processed', 'failed')),
+  initiated_by       uuid references users(id),
+  processed_at       timestamptz,
+  created_at         timestamptz not null default now()
+);
+
+create table if not exists invoices (
+  id                  uuid primary key default gen_random_uuid(),
+  invoice_number      text unique not null,
+  type                text not null check (type in ('invoice', 'credit_note')),
+  payment_id          uuid not null references payments(id),
+  refund_id           uuid references refunds(id),
+  original_invoice_id uuid references invoices(id),
+  billed_to_name      text,
+  billed_to_email     text,
+  billed_to_phone     text,
+  billed_to_gstin     text,
+  billed_to_state_id  uuid references states(id),
+  billed_to_address   text,
+  lines               jsonb not null default '[]',
+  taxable_total_paise integer not null default 0,
+  cgst_paise          integer not null default 0,
+  sgst_paise          integer not null default 0,
+  igst_paise          integer not null default 0,
+  grand_total_paise   integer not null default 0,
+  pdf_key             text,
+  issued_at           timestamptz not null default now()
+);
+
+create table if not exists webhook_events (
+  id           uuid primary key default gen_random_uuid(),
+  provider     text not null,
+  event_id     text not null,
+  event_type   text not null,
+  payload      jsonb not null,
+  status       text not null default 'received' check (status in ('received', 'processed', 'failed', 'ignored')),
+  error        text,
+  processed_at timestamptz,
+  created_at   timestamptz not null default now(),
+  unique (provider, event_id)
+);
+
+-- Coupons v2 additions.
+alter table coupons add column if not exists max_discount_paise integer;
+alter table coupons add column if not exists applies_to text check (applies_to in ('issues', 'subscriptions', 'both'));
+alter table coupons add column if not exists formats text[];
+alter table coupons add column if not exists plan_ids uuid[];
+alter table coupons add column if not exists min_order_value_paise integer;
+alter table coupons add column if not exists starts_at timestamptz;
+alter table coupons add column if not exists ends_at timestamptz;
+alter table coupons add column if not exists total_limit integer;
+alter table coupons add column if not exists per_user_limit integer not null default 1;
+alter table coupons add column if not exists first_term_only boolean not null default true;
+
+create table if not exists coupon_redemptions (
+  id              uuid primary key default gen_random_uuid(),
+  coupon_id       uuid not null references coupons(id) on delete cascade,
+  user_id         uuid not null references users(id),
+  order_id        uuid references orders(id),
+  subscription_id uuid references subscriptions(id),
+  discount_amount_paise integer not null,
+  status          text not null default 'reserved' check (status in ('reserved', 'confirmed', 'released')),
+  reserved_until  timestamptz,
+  created_at      timestamptz not null default now()
+);
+
+-- Support requests (replaces the narrower return_requests for the next phase).
+create table if not exists support_requests (
+  id                      uuid primary key default gen_random_uuid(),
+  request_number          text unique not null,
+  user_id                 uuid not null references users(id) on delete cascade,
+  type                    text not null check (type in (
+    'damaged', 'wrong_issue', 'missing_pages', 'not_received', 'digital_access',
+    'duplicate_purchase', 'subscription_query', 'other'
+  )),
+  order_id                uuid references orders(id),
+  order_item_id           uuid references order_items(id),
+  -- Orders/shipments v2 aren't populated yet (see note above orders table) — until that
+  -- migration, requests about an existing purchase link here instead, to the live model.
+  legacy_issue_order_id   uuid references issue_orders(id),
+  shipment_id             uuid references shipments(id),
+  subscription_id         uuid references subscriptions(id),
+  description             text not null,
+  attachment_keys         text[] not null default '{}',
+  status                  text not null default 'open' check (status in ('open', 'in_review', 'approved', 'rejected', 'resolved', 'closed')),
+  resolution              text check (resolution in ('replace', 'refund', 'access_restored', 'no_action')),
+  resolution_note         text,
+  replacement_shipment_id uuid references shipments(id),
+  refund_id               uuid references refunds(id),
+  handled_by              uuid references users(id),
+  resolved_at             timestamptz,
+  created_at              timestamptz not null default now()
+);
+create index if not exists idx_support_requests_user on support_requests (user_id);
+
+create table if not exists support_messages (
+  id                 uuid primary key default gen_random_uuid(),
+  support_request_id uuid not null references support_requests(id) on delete cascade,
+  sender_user_id     uuid references users(id),
+  is_staff           boolean not null default false,
+  body               text not null,
+  created_at         timestamptz not null default now()
+);
+
+-- Article submissions: themes as a managed table, plus the new fields from
+-- spec §3.10. Existing theme/theme_other/contribution_token/volume_number/
+-- issue_number/page_range columns are untouched and still drive the current
+-- submit-article flow until the next phase migrates to these.
+create table if not exists article_themes (
+  id         uuid primary key default gen_random_uuid(),
+  name       text unique not null,
+  is_active  boolean not null default true,
+  sort_order integer not null default 0
+);
+
+alter table article_submissions add column if not exists theme_id uuid references article_themes(id);
+alter table article_submissions add column if not exists current_version_id uuid;
+alter table article_submissions add column if not exists payment_token text unique;
+alter table article_submissions add column if not exists payment_deadline timestamptz;
+alter table article_submissions add column if not exists hold_reason text;
+alter table article_submissions add column if not exists scheduled_issue_id uuid references issues(id);
+alter table article_submissions add column if not exists page_from integer;
+alter table article_submissions add column if not exists page_to integer;
+alter table article_submissions add column if not exists withdrawn_at timestamptz;
+alter table article_submissions add column if not exists withdraw_reason text;
+
+-- Merges primary author + co-authors into one table (is_primary distinguishes
+-- them), per spec §3.10. The existing author_* columns on article_submissions
+-- and the article_co_authors table are untouched until pages migrate to this.
+create table if not exists article_authors (
+  id            uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references article_submissions(id) on delete cascade,
+  is_primary    boolean not null default false,
+  position      integer not null default 1,
+  salutation    text,
+  name          text not null,
+  email         text not null,
+  phone         text,
+  affiliation   text,
+  designation   text,
+  city          text,
+  state         text,
+  country       text default 'India',
+  user_id       uuid references users(id)
+);
+create index if not exists idx_article_authors_submission on article_authors (submission_id);
+
+alter table submission_versions add column if not exists original_filename text;
+alter table submission_versions add column if not exists mime_type text;
+alter table submission_versions add column if not exists size_bytes integer;
+alter table submission_versions add column if not exists server_word_count integer;
+alter table submission_versions add column if not exists note text;
+
+alter table article_messages add column if not exists read_by_author_at timestamptz;
+alter table article_messages add column if not exists read_by_staff_at timestamptz;
+
+alter table article_payments add column if not exists contributor_phone text;
+alter table article_payments add column if not exists contributor_gstin text;
+alter table article_payments add column if not exists invoice_id uuid references invoices(id);
+
+create table if not exists article_status_history (
+  id            uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references article_submissions(id) on delete cascade,
+  from_status   text,
+  to_status     text not null,
+  actor_user_id uuid references users(id),
+  note          text,
+  occurred_at   timestamptz not null default now()
+);
+
+-- Platform-wide settings, tax rates, email/audit logs (spec §3.11).
+create table if not exists settings (
+  key   text primary key,
+  value jsonb not null
+);
+
+create table if not exists tax_rates (
+  id             uuid primary key default gen_random_uuid(),
+  product_type   text not null check (product_type in (
+    'digital_issue', 'print_issue', 'subscription_digital', 'subscription_print', 'publication_charge', 'shipping'
+  )),
+  rate_percent   numeric(5, 2) not null,
+  hsn_sac_code   text,
+  effective_from date not null default current_date
+);
+
+create table if not exists email_log (
+  id                 uuid primary key default gen_random_uuid(),
+  user_id            uuid references users(id),
+  "to"               text not null,
+  template           text not null,
+  entity_type        text,
+  entity_id          uuid,
+  status             text not null default 'queued' check (status in ('queued', 'sent', 'failed')),
+  provider_message_id text,
+  error              text,
+  sent_at            timestamptz,
+  created_at         timestamptz not null default now()
+);
+
+create table if not exists audit_log (
+  id            uuid primary key default gen_random_uuid(),
+  actor_user_id uuid references users(id),
+  action        text not null,
+  entity_type   text not null,
+  entity_id     uuid,
+  before        jsonb,
+  after         jsonb,
+  ip            text,
+  created_at    timestamptz not null default now()
+);

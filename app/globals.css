@@ -31,7 +31,10 @@ input:-webkit-autofill:focus {
 .status-cancelled,
 .status-failed,
 .status-rejected { @apply bg-red-100 text-red-800; }
-.status-draft { @apply bg-gray-100 text-gray-700; }
+.status-draft,
+.status-closed { @apply bg-gray-100 text-gray-700; }
+.status-resolved { @apply bg-green-100 text-green-800; }
+.status-open { @apply bg-amber-100 text-amber-800; }
 .status-processing,
 .status-out_for_delivery,
 .status-under_review,
@@ -39,6 +42,8 @@ input:-webkit-autofill:focus {
 .status-revision_required,
 .status-partially_paid,
 .status-scheduled,
+.status-in_review,
+.status-approved,
 .status-return_requested,
 .status-refund_initiated,
 .status-refund_processing,

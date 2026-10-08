@@ -38,6 +38,7 @@ type SubmissionRow = {
   published_date: string | null;
   article_url: string | null;
   reject_reason: string | null;
+  payment_deadline: string | null;
 };
 
 const toSubmission = (r: SubmissionRow): ArticleSubmission => ({
@@ -74,7 +75,8 @@ const toSubmission = (r: SubmissionRow): ArticleSubmission => ({
   pageRange: r.page_range,
   publishedDate: r.published_date,
   articleUrl: r.article_url,
-  rejectReason: r.reject_reason
+  rejectReason: r.reject_reason,
+  paymentDeadline: r.payment_deadline
 });
 
 type VersionRow = {
@@ -298,14 +300,17 @@ export async function updateSubmissionStatus(
 }
 
 /** Accept the article and open the publication-charge workflow: sets the charge, a shareable contribution token, and status -> payment_pending. */
-export async function acceptSubmission(id: string, publicationCharge: number): Promise<ArticleSubmission> {
+export async function acceptSubmission(id: string, publicationCharge: number, deadlineDays: number): Promise<ArticleSubmission> {
   const token = crypto.randomBytes(16).toString('hex');
+  const deadline = new Date();
+  deadline.setDate(deadline.getDate() + deadlineDays);
   const { data, error } = await getSupabaseAdmin()
     .from('article_submissions')
     .update({
       status: 'payment_pending',
       publication_charge: publicationCharge,
       contribution_token: token,
+      payment_deadline: deadline.toISOString(),
       updated_at: new Date().toISOString()
     })
     .eq('id', id)
@@ -313,6 +318,46 @@ export async function acceptSubmission(id: string, publicationCharge: number): P
     .single();
   if (error) throw error;
   return toSubmission(data as SubmissionRow);
+}
+
+export async function markSubmissionPaymentExpired(id: string): Promise<ArticleSubmission> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .update({ status: 'payment_expired', updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return toSubmission(data as SubmissionRow);
+}
+
+/** Submissions whose payment deadline has passed and are still awaiting payment — for job J5. */
+export async function listSubmissionsPastPaymentDeadline(): Promise<ArticleSubmission[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .select('*')
+    .in('status', ['payment_pending', 'partially_paid'])
+    .lt('payment_deadline', new Date().toISOString());
+  if (error) throw error;
+  return (data as SubmissionRow[]).map(toSubmission);
+}
+
+/** Submissions awaiting payment whose deadline is within the given number of days — for reminder emails. */
+export async function listSubmissionsWithUpcomingDeadline(daysBefore: number): Promise<ArticleSubmission[]> {
+  const target = new Date();
+  target.setDate(target.getDate() + daysBefore);
+  const dayStart = new Date(target);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(target);
+  dayEnd.setHours(23, 59, 59, 999);
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .select('*')
+    .in('status', ['payment_pending', 'partially_paid'])
+    .gte('payment_deadline', dayStart.toISOString())
+    .lte('payment_deadline', dayEnd.toISOString());
+  if (error) throw error;
+  return (data as SubmissionRow[]).map(toSubmission);
 }
 
 export async function rejectSubmission(id: string, reason: string): Promise<ArticleSubmission> {

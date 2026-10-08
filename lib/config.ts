@@ -17,7 +17,8 @@ export const config = {
     posters: required('SUPABASE_POSTERS_BUCKET', 'issue-posters'),
     issuePdfs: required('SUPABASE_ISSUE_PDFS_BUCKET', 'issue-pdfs'),
     submissionFiles: required('SUPABASE_SUBMISSION_FILES_BUCKET', 'submission-files'),
-    adminEdits: required('SUPABASE_ADMIN_EDITS_BUCKET', 'admin-edits')
+    adminEdits: required('SUPABASE_ADMIN_EDITS_BUCKET', 'admin-edits'),
+    supportAttachments: required('SUPABASE_SUPPORT_ATTACHMENTS_BUCKET', 'support-attachments')
   },
 
   jwtSecret: required('JWT_SECRET', 'dev-only-insecure-secret-change-me'),
@@ -50,6 +51,8 @@ export const config = {
     clientId: required('GOOGLE_CLIENT_ID', ''),
     clientSecret: required('GOOGLE_CLIENT_SECRET', '')
   },
+
+  cronSecret: required('CRON_SECRET', ''),
 
   adapters: {
     storage: required('STORAGE_ADAPTER', 'stub') as 'stub' | 'supabase',

@@ -10,6 +10,7 @@ export async function ensureBuckets(): Promise<void> {
   await storage.ensureBucket(config.storageBuckets.issuePdfs, false);
   await storage.ensureBucket(config.storageBuckets.submissionFiles, false);
   await storage.ensureBucket(config.storageBuckets.adminEdits, false);
+  await storage.ensureBucket(config.storageBuckets.supportAttachments, false);
 }
 
 export async function uploadPoster(issueId: string, file: Buffer, contentType: string): Promise<string> {
@@ -63,4 +64,16 @@ export async function getSubmissionFileSignedUrl(path: string): Promise<string> 
 
 export async function getAdminEditFileSignedUrl(path: string): Promise<string> {
   return getStorageAdapter().getSignedUrl(config.storageBuckets.adminEdits, path, SIGNED_URL_TTL_SECONDS);
+}
+
+export async function uploadSupportAttachment(requestId: string, index: number, file: Buffer, contentType: string): Promise<string> {
+  const storage = getStorageAdapter();
+  const ext = contentType.split('/')[1] || 'jpg';
+  const path = `${requestId}/${index}-${Date.now()}.${ext}`;
+  await storage.upload(config.storageBuckets.supportAttachments, path, file, contentType);
+  return path;
+}
+
+export async function getSupportAttachmentSignedUrl(path: string): Promise<string> {
+  return getStorageAdapter().getSignedUrl(config.storageBuckets.supportAttachments, path, SIGNED_URL_TTL_SECONDS);
 }

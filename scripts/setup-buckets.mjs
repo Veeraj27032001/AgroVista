@@ -22,7 +22,8 @@ const BUCKETS = [
   { name: process.env.SUPABASE_POSTERS_BUCKET || 'issue-posters', public: true },
   { name: process.env.SUPABASE_ISSUE_PDFS_BUCKET || 'issue-pdfs', public: false },
   { name: process.env.SUPABASE_SUBMISSION_FILES_BUCKET || 'submission-files', public: false },
-  { name: process.env.SUPABASE_ADMIN_EDITS_BUCKET || 'admin-edits', public: false }
+  { name: process.env.SUPABASE_ADMIN_EDITS_BUCKET || 'admin-edits', public: false },
+  { name: process.env.SUPABASE_SUPPORT_ATTACHMENTS_BUCKET || 'support-attachments', public: false }
 ];
 
 async function main() {

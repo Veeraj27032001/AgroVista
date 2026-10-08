@@ -16,7 +16,9 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
-  LayoutTemplate
+  LayoutTemplate,
+  LifeBuoy,
+  Settings
 } from 'lucide-react';
 
 const LINKS = [
@@ -27,10 +29,12 @@ const LINKS = [
   { href: '/admin/plans', label: 'Plans', icon: CreditCard },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: Users },
   { href: '/admin/orders', label: 'Orders', icon: Package },
-  { href: '/admin/returns', label: 'Returns', icon: Undo2 },
+  { href: '/admin/returns', label: 'Returns (legacy)', icon: Undo2 },
+  { href: '/admin/support-requests', label: 'Help Requests', icon: LifeBuoy },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
   { href: '/admin/submissions', label: 'Submissions', icon: FileText },
-  { href: '/admin/users', label: 'Users', icon: UserCog }
+  { href: '/admin/users', label: 'Users', icon: UserCog },
+  { href: '/admin/settings', label: 'Settings', icon: Settings }
 ];
 
 export default function AdminSidebar() {

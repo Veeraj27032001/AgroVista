@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { acceptSubmission } from '@/lib/db/submissions';
 import { notifyAccepted } from '@/lib/article-notifications';
+import { getSetting } from '@/lib/db/settings';
 
 /** POST /api/admin/submissions/[id]/accept  { publicationCharge } */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'missing_charge', message: 'A publication charge amount is required.' }, { status: 400 });
   }
 
-  const submission = await acceptSubmission(id, publicationCharge);
+  const deadlineDays = await getSetting('article_payment_deadline_days', 15);
+  const submission = await acceptSubmission(id, publicationCharge, deadlineDays);
   await notifyAccepted(submission);
   return NextResponse.json({ submission });
 }

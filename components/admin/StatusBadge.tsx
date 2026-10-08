@@ -28,7 +28,12 @@ const STATUS_VARIANT: Record<string, string> = {
   payment_pending: 'warning',
   partially_paid: 'primary',
   payment_completed: 'success',
-  scheduled: 'primary'
+  scheduled: 'primary',
+  open: 'warning',
+  in_review: 'primary',
+  approved: 'primary',
+  resolved: 'success',
+  closed: 'secondary'
 };
 
 export default function StatusBadge({ status }: { status: string }) {

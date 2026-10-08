@@ -29,6 +29,7 @@ export type SubmissionStatus =
   | 'rejected'
   | 'payment_pending'
   | 'partially_paid'
+  | 'payment_expired'
   | 'payment_completed'
   | 'scheduled'
   | 'published';
@@ -220,6 +221,7 @@ export type ArticleSubmission = {
   publishedDate: string | null;
   articleUrl: string | null;
   rejectReason: string | null;
+  paymentDeadline: string | null;
 };
 
 export type ArticleCoAuthor = {
@@ -239,7 +241,7 @@ export type ArticleCoAuthor = {
   createdAt: string;
 };
 
-export type ArticlePaymentStatus = 'pending' | 'success' | 'failed';
+export type ArticlePaymentStatus = 'pending' | 'success' | 'failed' | 'expired';
 
 export type ArticlePayment = {
   id: string;

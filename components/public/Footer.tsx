@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="container">
         <div className="row">
-          <div className="col-lg-4 col-12 mb-5 mb-lg-0">
+          <div className="col-lg-3 col-12 mb-5 mb-lg-0">
             <a className="navbar-brand d-flex align-items-center mb-3" href="/">
               <span className="navbar-brand-mark">
                 <i className="bi bi-flower1"></i>
@@ -42,6 +42,27 @@ export default function Footer() {
             </p>
             <p className="mb-0">
               <a href="/archive?q=Policy">Policy</a>
+            </p>
+          </div>
+          <div className="col-lg-2 col-6">
+            <h5 className="mb-4">Legal</h5>
+            <p>
+              <a href="/privacy-policy">Privacy Policy</a>
+            </p>
+            <p>
+              <a href="/terms-of-service">Terms of Service</a>
+            </p>
+            <p>
+              <a href="/refund-policy">Refund Policy</a>
+            </p>
+            <p>
+              <a href="/shipping-policy">Shipping Policy</a>
+            </p>
+            <p>
+              <a href="/author-guidelines">Author Guidelines</a>
+            </p>
+            <p className="mb-0">
+              <a href="/faq">FAQ</a>
             </p>
           </div>
           <div className="col-lg-3 col-12 ms-lg-auto">

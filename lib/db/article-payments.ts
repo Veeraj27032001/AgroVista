@@ -91,3 +91,16 @@ export async function updateSubmissionAmountPaid(submissionId: string, amountPai
   const { error } = await getSupabaseAdmin().from('article_submissions').update({ amount_paid: amountPaid }).eq('id', submissionId);
   if (error) throw error;
 }
+
+/** Pending contributions older than `olderThanMinutes` — for job J2 (expire stale contribution attempts). */
+export async function listStalePendingContributions(olderThanMinutes: number): Promise<ArticlePayment[]> {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60 * 1000).toISOString();
+  const { data, error } = await getSupabaseAdmin().from('article_payments').select('*').eq('status', 'pending').lt('created_at', cutoff);
+  if (error) throw error;
+  return (data as PaymentRow[]).map(toPayment);
+}
+
+export async function expireContribution(id: string): Promise<void> {
+  const { error } = await getSupabaseAdmin().from('article_payments').update({ status: 'expired' }).eq('id', id);
+  if (error) throw error;
+}

@@ -107,3 +107,28 @@ export async function notifyPublished(s: ArticleSubmission) {
     )
   );
 }
+
+export async function notifyPaymentReminder(s: ArticleSubmission, daysLeft: number) {
+  const balance = (s.publicationCharge || 0) - s.amountPaid;
+  const link = `${config.appUrl}/pay/${s.contributionToken}`;
+  await send(
+    s.authorEmail || '',
+    `Payment reminder — ${s.articleCode} (${daysLeft} days left)`,
+    wrap(
+      'Payment Reminder',
+      `<p><strong>${s.title}</strong> (${s.articleCode}) has a balance of ₹${balance} due within ${daysLeft} day${daysLeft === 1 ? '' : 's'}.</p>
+       <p><a href="${link}">Pay or share the payment link</a></p>`
+    )
+  );
+}
+
+export async function notifyPaymentExpired(s: ArticleSubmission) {
+  await send(
+    s.authorEmail || '',
+    `Payment deadline passed — ${s.articleCode}`,
+    wrap(
+      'Payment Deadline Passed',
+      `<p>The payment deadline for <strong>${s.title}</strong> (${s.articleCode}) has passed without the publication charge being fully paid. Please contact the editorial team if you still wish to proceed.</p>`
+    )
+  );
+}

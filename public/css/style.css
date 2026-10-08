@@ -867,3 +867,12 @@ PAYWALL / AUTH / VIEWER — added for protected reading
 }
 .viewer-blocked i { font-size: 40px; color: rgba(255,255,255,0.4); }
 .viewer-progress { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; padding: 20px; }
+
+/*---------------------------------------
+LEGAL / INFO PAGES
+-----------------------------------------*/
+.legal-content h2 { font-size: 20px; margin-top: 32px; margin-bottom: 12px; }
+.legal-content h3 { font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+.legal-content p, .legal-content li { font-size: 15px; color: var(--p-color); line-height: 1.7; }
+.legal-content ul { padding-left: 20px; margin-bottom: 16px; }
+.legal-content .placeholder { background: var(--section-bg-color); padding: 2px 6px; border-radius: 4px; color: var(--primary-color); font-weight: 600; }

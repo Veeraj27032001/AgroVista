@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { hasPdfAccess } from '@/lib/subscription';
 import { getSiteContentMap } from '@/lib/db/site-content';
 import { SITE_CONTENT_FIELDS } from '@/lib/site-content-fields';
+import ContactForm from '@/components/public/ContactForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -282,25 +283,7 @@ export default async function HomePage() {
             <div className="col-lg-6 col-12 mb-5 mb-lg-0">
               <div className="eyebrow">Get in Touch</div>
               <h2 className="mb-4">Story ideas, feedback or advertising enquiries</h2>
-              <form action="#" method="post" className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label mb-2">Full Name</label>
-                  <input type="text" className="form-control" placeholder="Your name" required />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label mb-2">Email address</label>
-                  <input type="email" className="form-control" placeholder="you@example.com" required />
-                </div>
-                <div className="col-12">
-                  <label className="form-label mb-2">Message</label>
-                  <textarea className="form-control" rows={4} placeholder="Tell us what you'd like to see covered"></textarea>
-                </div>
-                <div className="col-12">
-                  <button type="submit" className="btn custom-btn">
-                    Send Message
-                  </button>
-                </div>
-              </form>
+              <ContactForm />
             </div>
             <div className="col-lg-5 col-12 ms-lg-auto">
               <div className="feature-item">

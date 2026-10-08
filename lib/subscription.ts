@@ -4,15 +4,21 @@ import { hasSoftCopyAccess, createSubscriptionCoveredOrder } from './db/orders';
 import { listActiveHardCopySubscriptions } from './db/catalog';
 import { findUserById } from './db/users';
 import { getStateName } from './db/locations';
+import { hasActiveEntitlement } from './db/entitlements';
 import type { Issue } from './types';
 
 /**
- * PDF access check (plan §10.1): a user can read an issue's PDF if they either
- * (a) have a paid one-time order covering soft/both format, or
- * (b) have an active subscription (format soft/both) whose date range covers
- *     the issue's published_at.
+ * PDF access check (plan §10.1, migrating to spec §3.5 "entitlements alone
+ * decide who can open the reader"): a user can read an issue's PDF if any of
+ * — an active entitlement row (the v3 source of truth, populated for new
+ *   purchases going forward and backfilled for history by
+ *   scripts/backfill-entitlements.mjs),
+ * — a paid one-time order covering soft/both format (pre-entitlement data),
+ * — an active subscription (format soft/both) whose date range covers the
+ *   issue's published_at (subscriptions haven't migrated to entitlements yet).
  */
 export async function hasPdfAccess(userId: string, issue: Issue): Promise<boolean> {
+  if (await hasActiveEntitlement(userId, issue.id)) return true;
   if (await hasSoftCopyAccess(userId, issue.id)) return true;
 
   const sub = await getActiveSubscriptionForUser(userId);

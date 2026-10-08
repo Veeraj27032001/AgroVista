@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/cron/expire-pending-orders", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/expire-pending-contributions", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/article-payment-reminders", "schedule": "30 3 * * *" }
+  ]
+}
