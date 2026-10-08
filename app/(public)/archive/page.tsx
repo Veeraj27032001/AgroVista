@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import ArchiveClient from '@/components/public/ArchiveClient';
 
-export const metadata = { title: 'Magazine Archive — AgroVista Monthly' };
+export const metadata = { title: 'Magazine Archive — AgriOxen Monthly' };
 
 export default function ArchivePage() {
   return (

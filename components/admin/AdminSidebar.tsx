@@ -15,11 +15,13 @@ import {
   FileText,
   UserCog,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LayoutTemplate
 } from 'lucide-react';
 
 const LINKS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/content', label: 'Home Page Content', icon: LayoutTemplate },
   { href: '/admin/issues', label: 'Issues', icon: BookOpen },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/plans', label: 'Plans', icon: CreditCard },
@@ -58,7 +60,7 @@ export default function AdminSidebar() {
   return (
     <aside className={`admin-sidebar ${collapsed ? 'collapsed w-16' : 'w-56'} shrink-0 border-r border-gray-200 bg-white py-6`}>
       <div className="mb-6 flex items-center justify-between px-4">
-        <span className="admin-sidebar-brand-text font-serif text-lg font-bold text-primary">AgroVista Admin</span>
+        <span className="admin-sidebar-brand-text font-serif text-lg font-bold text-primary">AgriOxen Admin</span>
         <button type="button" className="admin-sidebar-toggle" onClick={toggle} aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}>
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>

@@ -2,6 +2,8 @@ import { listPublishedIssues } from '@/lib/db/catalog';
 import { listCategories } from '@/lib/db/categories';
 import { getSession } from '@/lib/auth';
 import { hasPdfAccess } from '@/lib/subscription';
+import { getSiteContentMap } from '@/lib/db/site-content';
+import { SITE_CONTENT_FIELDS } from '@/lib/site-content-fields';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +26,10 @@ export default async function HomePage() {
   const session = await getSession();
   const latestAccess = latest && session ? await hasPdfAccess(session.userId, latest) : false;
 
+  const contentMap = await getSiteContentMap();
+  const defaults = Object.fromEntries(SITE_CONTENT_FIELDS.map((f) => [f.key, f.default]));
+  const c = (key: string) => contentMap[key] ?? defaults[key] ?? '';
+
   return (
     <>
       <section className="hero-section">
@@ -31,14 +37,10 @@ export default async function HomePage() {
           <div className="row align-items-center">
             <div className="col-lg-6 col-12 mb-5 mb-lg-0">
               <span className="hero-badge">
-                <i className="bi bi-calendar-event"></i> New issue every month
+                <i className="bi bi-calendar-event"></i> {c('hero_badge')}
               </span>
-              <h1 className="mb-4">Stories &amp; data shaping the future of agriculture.</h1>
-              <p className="lead mb-4">
-                AgroVista Monthly brings farmers, agronomists and agribusiness leaders in-depth reporting on
-                technology, markets, sustainability and the people growing the world&apos;s food. Sign in and unlock
-                any issue to read online.
-              </p>
+              <h1 className="mb-4">{c('hero_title')}</h1>
+              <p className="lead mb-4">{c('hero_subtitle')}</p>
               <div className="d-flex flex-wrap gap-3">
                 <a href="#latest-issue" className="btn custom-btn">
                   Read Current Issue
@@ -54,11 +56,11 @@ export default async function HomePage() {
                   <span className="stat-label">Issues Published</span>
                 </div>
                 <div>
-                  <span className="stat-num">3</span>
+                  <span className="stat-num">{c('hero_stat_volumes')}</span>
                   <span className="stat-label">Volumes</span>
                 </div>
                 <div>
-                  <span className="stat-num">45K+</span>
+                  <span className="stat-num">{c('hero_stat_readers')}</span>
                   <span className="stat-label">Monthly Readers</span>
                 </div>
               </div>
@@ -70,7 +72,7 @@ export default async function HomePage() {
                 <div className="hero-cover-card">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={latest?.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'}
+                    src={latest?.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgriOxen'}
                     alt={latest ? `${latest.title} cover` : 'Latest issue cover'}
                   />
                 </div>
@@ -97,15 +99,15 @@ export default async function HomePage() {
               <span className="stat-label">Monthly Issues</span>
             </div>
             <div className="col-6 col-lg-3">
-              <span className="stat-num">120+</span>
+              <span className="stat-num">{c('stats_experts')}</span>
               <span className="stat-label">Contributing Experts</span>
             </div>
             <div className="col-6 col-lg-3">
-              <span className="stat-num">60+</span>
+              <span className="stat-num">{c('stats_countries')}</span>
               <span className="stat-label">Countries Read In</span>
             </div>
             <div className="col-6 col-lg-3">
-              <span className="stat-num">₹49</span>
+              <span className="stat-num">{c('stats_price')}</span>
               <span className="stat-label">Per Issue, Read Online</span>
             </div>
           </div>
@@ -118,7 +120,7 @@ export default async function HomePage() {
             <div className="col-lg-5 col-12 mb-4 mb-lg-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={latest?.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'}
+                src={latest?.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgriOxen'}
                 className="img-fluid rounded-4 shadow"
                 alt={latest ? latest.title : 'Latest issue cover'}
               />
@@ -169,16 +171,9 @@ export default async function HomePage() {
           <div className="row">
             <div className="col-lg-6 col-12 mb-5 mb-lg-0">
               <div className="eyebrow">About the Magazine</div>
-              <h2 className="mb-4">Independent, practical reporting for the whole agriculture value chain.</h2>
-              <p>
-                AgroVista Monthly has published issues since 2024 — covering crop science, livestock, agri-tech,
-                policy and the markets that move the industry. Every issue is written for people who work the land
-                and the businesses that support them.
-              </p>
-              <p className="mb-0">
-                Sign in once, unlock an issue for a small one-time fee, and read it online any time afterwards — no
-                re-purchase needed, ever.
-              </p>
+              <h2 className="mb-4">{c('about_title')}</h2>
+              <p>{c('about_paragraph_1')}</p>
+              <p className="mb-0">{c('about_paragraph_2')}</p>
             </div>
             <div className="col-lg-5 col-12 ms-lg-auto">
               <div className="feature-item">
@@ -186,8 +181,8 @@ export default async function HomePage() {
                   <i className="bi bi-graph-up-arrow"></i>
                 </div>
                 <div>
-                  <h5>Markets &amp; Policy</h5>
-                  <p>Grain prices, trade rules and subsidy shifts explained in plain language.</p>
+                  <h5>{c('about_feature_1_title')}</h5>
+                  <p>{c('about_feature_1_body')}</p>
                 </div>
               </div>
               <div className="feature-item">
@@ -195,8 +190,8 @@ export default async function HomePage() {
                   <i className="bi bi-cpu"></i>
                 </div>
                 <div>
-                  <h5>Agri-Technology</h5>
-                  <p>Drones, sensors, precision farming and the startups building what&apos;s next.</p>
+                  <h5>{c('about_feature_2_title')}</h5>
+                  <p>{c('about_feature_2_body')}</p>
                 </div>
               </div>
               <div className="feature-item mb-0">
@@ -204,8 +199,8 @@ export default async function HomePage() {
                   <i className="bi bi-shield-lock"></i>
                 </div>
                 <div>
-                  <h5>Read Online, Securely</h5>
-                  <p>Every issue opens after sign-in — access follows your account, not a device.</p>
+                  <h5>{c('about_feature_3_title')}</h5>
+                  <p>{c('about_feature_3_body')}</p>
                 </div>
               </div>
             </div>
@@ -259,7 +254,7 @@ export default async function HomePage() {
                       <span className="issue-card-tag">{issue.language}</span>
                       <a href={`/issues/${issue.id}`}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'} alt={issue.title} />
+                        <img src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgriOxen'} alt={issue.title} />
                       </a>
                     </div>
                     <div className="issue-card-body">
@@ -315,8 +310,8 @@ export default async function HomePage() {
                 <div>
                   <h5>Editorial Desk</h5>
                   <p>
-                    <a href="mailto:editor@agrovistamonthly.com" className="text-primary-custom">
-                      editor@agrovistamonthly.com
+                    <a href={`mailto:${c('contact_email')}`} className="text-primary-custom">
+                      {c('contact_email')}
                     </a>
                   </p>
                 </div>
@@ -327,7 +322,7 @@ export default async function HomePage() {
                 </div>
                 <div>
                   <h5>Reader Support</h5>
-                  <p>+91 80 4567 8900 &nbsp;·&nbsp; Mon–Fri, 9am–6pm IST</p>
+                  <p>{c('contact_phone')}</p>
                 </div>
               </div>
               <div className="feature-item mb-0">
@@ -336,7 +331,7 @@ export default async function HomePage() {
                 </div>
                 <div>
                   <h5>Head Office</h5>
-                  <p className="mb-0">Bengaluru, Karnataka, India</p>
+                  <p className="mb-0">{c('contact_address')}</p>
                 </div>
               </div>
             </div>

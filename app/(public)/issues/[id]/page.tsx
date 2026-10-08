@@ -154,7 +154,7 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
             <div className="col-lg-4 col-8 mx-auto mx-lg-0 mb-4 mb-lg-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'}
+                src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgriOxen'}
                 alt={issue.title}
                 className="issue-hero-cover"
               />
@@ -227,7 +227,7 @@ export default function IssueDetailPage({ params }: { params: Promise<{ id: stri
                       <span className="issue-card-tag">{rel.language}</span>
                       <a href={`/issues/${rel.id}`}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={rel.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'} alt={rel.title} />
+                        <img src={rel.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgriOxen'} alt={rel.title} />
                       </a>
                     </div>
                     <div className="issue-card-body">

@@ -18,21 +18,27 @@ input:-webkit-autofill:focus {
   transition: background-color 9999s ease-in-out 0s;
 }
 
-.status-pending { @apply bg-amber-100 text-amber-800; }
+.status-pending,
+.status-submitted,
+.status-payment_pending { @apply bg-amber-100 text-amber-800; }
 .status-active,
 .status-paid,
 .status-delivered,
 .status-accepted,
+.status-payment_completed,
 .status-published { @apply bg-green-100 text-green-800; }
 .status-expired,
 .status-cancelled,
 .status-failed,
 .status-rejected { @apply bg-red-100 text-red-800; }
+.status-draft { @apply bg-gray-100 text-gray-700; }
 .status-processing,
 .status-out_for_delivery,
 .status-under_review,
 .status-resubmitted,
-.status-revision_requested,
+.status-revision_required,
+.status-partially_paid,
+.status-scheduled,
 .status-return_requested,
 .status-refund_initiated,
 .status-refund_processing,

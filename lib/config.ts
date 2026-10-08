@@ -38,7 +38,7 @@ export const config = {
     secure: required('SMTP_SECURE', 'false') === 'true',
     user: required('SMTP_USER', ''),
     pass: required('SMTP_PASS', ''),
-    from: required('SMTP_FROM', 'AgroVista <no-reply@agrovista.example>')
+    from: required('SMTP_FROM', 'AgriOxen <no-reply@agrioxen.example>')
   },
 
   fast2sms: {

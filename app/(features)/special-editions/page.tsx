@@ -1,7 +1,7 @@
 import { listPublishedIssues } from '@/lib/db/catalog';
 import IssueGrid from '@/components/public/IssueGrid';
 
-export const metadata = { title: 'Special Editions — AgroVista' };
+export const metadata = { title: 'Special Editions — AgriOxen' };
 export const dynamic = 'force-dynamic';
 
 export default async function SpecialEditionsPage() {

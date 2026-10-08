@@ -31,11 +31,11 @@ export async function POST(req: NextRequest) {
 
     const notifier = getNotifierAdapter();
     if (channel === 'phone') {
-      await notifier.sendSms({ to: value, message: `Your AgroVista Monthly sign-in code is ${code}. It expires in 10 minutes.` });
+      await notifier.sendSms({ to: value, message: `Your AgriOxen Monthly sign-in code is ${code}. It expires in 10 minutes.` });
     } else {
       await notifier.sendEmail({
         to: user.email,
-        subject: 'Your AgroVista Monthly sign-in code',
+        subject: 'Your AgriOxen Monthly sign-in code',
         html: `
           <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
             <h2 style="color:#2B2A1F;">Your sign-in code</h2>

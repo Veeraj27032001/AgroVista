@@ -9,7 +9,7 @@ export default function Footer() {
                 <i className="bi bi-flower1"></i>
               </span>
               <span className="navbar-brand-text">
-                AgroVista<small>Monthly Magazine</small>
+                AgriOxen<small>Monthly Magazine</small>
               </span>
             </a>
             <p>Independent monthly reporting on agriculture technology, markets, sustainability and people.</p>
@@ -53,7 +53,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom d-flex flex-wrap justify-content-between">
-          <p className="mb-0">Copyright © 2026 AgroVista Monthly. All rights reserved.</p>
+          <p className="mb-0">Copyright © 2026 AgriOxen Monthly. All rights reserved.</p>
           <p className="mb-0">Built for the global agriculture community.</p>
         </div>
       </div>

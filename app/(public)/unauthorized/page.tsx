@@ -1,4 +1,4 @@
-export const metadata = { title: 'Access Restricted — AgroVista Monthly' };
+export const metadata = { title: 'Access Restricted — AgriOxen Monthly' };
 
 export default function UnauthorizedPage() {
   return (

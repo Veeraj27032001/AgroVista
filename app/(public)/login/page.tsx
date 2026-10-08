@@ -49,7 +49,7 @@ function LoginForm() {
             <i className="bi bi-flower1"></i>
           </span>
           <span className="navbar-brand-text">
-            AgroVista<small>Monthly Magazine</small>
+            AgriOxen<small>Monthly Magazine</small>
           </span>
         </a>
 

@@ -1,54 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import Link from 'next/link';
 import type { ArticleSubmission } from '@/lib/types';
 import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import FileUpload from '@/components/ui/FileUpload';
-import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
 
 export default function SubmissionsPage() {
   const [submissions, setSubmissions] = useState<ArticleSubmission[] | null>(null);
-  const [resubmitTarget, setResubmitTarget] = useState<ArticleSubmission | null>(null);
-  const [word, setWord] = useState<File | null>(null);
-  const [pdf, setPdf] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
 
-  function load() {
+  useEffect(() => {
     fetch('/api/submissions', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => setSubmissions(data.submissions || []));
-  }
-
-  useEffect(load, []);
-
-  async function handleResubmit() {
-    if (!resubmitTarget || !word || !pdf) {
-      toast.error('Attach both files.');
-      return;
-    }
-    setBusy(true);
-    const form = new FormData();
-    form.set('word', word);
-    form.set('pdf', pdf);
-    const res = await fetch(`/api/submissions/${resubmitTarget.id}/resubmit`, { method: 'POST', credentials: 'include', body: form });
-    setBusy(false);
-    if (!res.ok) {
-      toast.error('Could not resubmit.');
-      return;
-    }
-    toast.success('Resubmitted');
-    setResubmitTarget(null);
-    setWord(null);
-    setPdf(null);
-    load();
-  }
+  }, []);
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Article Submissions</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Submissions</h1>
+        <Link href="/submit-article" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">
+          + Submit New Article
+        </Link>
+      </div>
       {!submissions ? (
         <div className="flex justify-center py-16">
           <Spinner />
@@ -56,33 +30,43 @@ export default function SubmissionsPage() {
       ) : submissions.length === 0 ? (
         <p className="text-gray-500">You haven&apos;t submitted any articles yet.</p>
       ) : (
-        <div className="space-y-3">
-          {submissions.map((s) => (
-            <div key={s.id} className="rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">{s.title}</p>
-                <Badge label={s.status} />
-              </div>
-              {s.adminNote && <p className="mt-2 text-sm text-gray-600">Editor note: {s.adminNote}</p>}
-              {s.status === 'revision_requested' && (
-                <Button size="sm" variant="secondary" className="mt-3" onClick={() => setResubmitTarget(s)}>
-                  Resubmit
-                </Button>
-              )}
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Article ID', 'Title', 'Theme', 'Date', 'Status', 'Payment', 'Publication'].map((h) => (
+                  <th key={h} className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-600">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {submissions.map((s) => (
+                <tr key={s.id} className="hover:bg-gray-50">
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <Link href={`/account/submissions/${s.id}`} className="font-medium text-primary">
+                      {s.articleCode || '—'}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 max-w-xs truncate">{s.title}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{s.theme === 'Other' ? s.themeOther : s.theme}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{new Date(s.createdAt).toLocaleDateString()}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <Badge label={s.status} />
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {s.publicationCharge ? `₹${s.amountPaid} / ₹${s.publicationCharge}` : 'N/A'}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {s.status === 'published' ? `Vol ${s.volumeNumber}, Issue ${s.issueNumber}` : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
-
-      <Modal isOpen={!!resubmitTarget} onClose={() => setResubmitTarget(null)} title="Resubmit revised files">
-        <div className="space-y-4">
-          <FileUpload label="Word File" accept=".doc,.docx" onChange={setWord} />
-          <FileUpload label="PDF File" accept=".pdf" onChange={setPdf} />
-          <Button className="w-full" loading={busy} onClick={handleResubmit}>
-            Resubmit
-          </Button>
-        </div>
-      </Modal>
     </div>
   );
 }

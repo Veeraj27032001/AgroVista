@@ -1,9 +1,19 @@
--- AgroVista — full schema. Run once in the Supabase SQL editor.
+-- AgriOxen — full schema. Run once in the Supabase SQL editor.
 -- All application access goes through this app's server code using the
 -- service_role key, which bypasses RLS — so RLS is enabled with NO policies,
 -- meaning the anon/publishable key can never read or write these tables.
 
 create extension if not exists pgcrypto;
+
+-- Lightweight CMS: editable copy for the Home page (and anywhere else),
+-- keyed by a stable string id. Missing keys fall back to hardcoded defaults
+-- in the page itself, so nothing breaks before an admin edits anything.
+create table if not exists site_content (
+  key        text primary key,
+  value      text not null,
+  updated_at timestamptz not null default now()
+);
+alter table site_content enable row level security;
 
 create table if not exists countries (
   id   uuid primary key default gen_random_uuid(),
@@ -234,25 +244,118 @@ create table if not exists article_submissions (
   description text,
   language    text not null default 'English',
   status      text not null default 'submitted' check (status in (
-    'submitted', 'under_review',
-    'revision_requested', 'resubmitted',
-    'accepted'
+    'draft', 'submitted', 'under_review',
+    'revision_required', 'resubmitted',
+    'accepted', 'rejected',
+    'payment_pending', 'partially_paid', 'payment_completed',
+    'scheduled', 'published'
   )),
   admin_note  text,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
 
+-- AgriOxen author/article/publication-charge spec — additive columns on the
+-- existing submissions table (kept as one row per article, not a new table,
+-- since every field here still belongs to exactly one submission).
+alter table article_submissions add column if not exists article_code text unique;
+alter table article_submissions add column if not exists theme text;
+alter table article_submissions add column if not exists theme_other text;
+alter table article_submissions add column if not exists word_count integer;
+alter table article_submissions add column if not exists author_salutation text;
+alter table article_submissions add column if not exists author_first_name text;
+alter table article_submissions add column if not exists author_last_name text;
+alter table article_submissions add column if not exists author_email text;
+alter table article_submissions add column if not exists author_phone text;
+alter table article_submissions add column if not exists author_affiliation text;
+alter table article_submissions add column if not exists author_designation text;
+alter table article_submissions add column if not exists author_city text;
+alter table article_submissions add column if not exists author_state text;
+alter table article_submissions add column if not exists author_country text default 'India';
+alter table article_submissions add column if not exists publication_charge numeric(10,2);
+alter table article_submissions add column if not exists amount_paid numeric(10,2) not null default 0;
+alter table article_submissions add column if not exists contribution_token text unique;
+alter table article_submissions add column if not exists volume_number integer;
+alter table article_submissions add column if not exists issue_number integer;
+alter table article_submissions add column if not exists publication_month integer check (publication_month between 1 and 12);
+alter table article_submissions add column if not exists publication_year integer;
+alter table article_submissions add column if not exists page_range text;
+alter table article_submissions add column if not exists published_date date;
+alter table article_submissions add column if not exists article_url text;
+alter table article_submissions add column if not exists reject_reason text;
+
+-- Widen the status check to the full AgriOxen lifecycle (replaces the
+-- original 5-value constraint) and rename revision_requested -> revision_required.
+update article_submissions set status = 'revision_required' where status = 'revision_requested';
+alter table article_submissions drop constraint if exists article_submissions_status_check;
+alter table article_submissions add constraint article_submissions_status_check check (status in (
+  'draft', 'submitted', 'under_review',
+  'revision_required', 'resubmitted',
+  'accepted', 'rejected',
+  'payment_pending', 'partially_paid', 'payment_completed',
+  'scheduled', 'published'
+));
+
 create table if not exists submission_versions (
   id             uuid primary key default gen_random_uuid(),
   submission_id  uuid not null references article_submissions(id) on delete cascade,
   version_number integer not null,
   word_path      text not null,
-  pdf_path       text not null,
+  pdf_path       text,
   submitted_by   text not null check (submitted_by in ('user', 'admin')),
   is_admin_edit  boolean not null default false,
   created_at     timestamptz not null default now()
 );
+alter table submission_versions alter column pdf_path drop not null;
+
+-- One row per co-author on a submission (the primary author's own details
+-- live on article_submissions itself; this table is additional co-authors only).
+create table if not exists article_co_authors (
+  id            uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references article_submissions(id) on delete cascade,
+  position      integer not null default 1,
+  salutation    text,
+  first_name    text not null,
+  last_name     text not null,
+  email         text not null,
+  phone         text,
+  affiliation   text,
+  designation   text,
+  city          text,
+  state         text,
+  country       text default 'India',
+  created_at    timestamptz not null default now()
+);
+
+-- One row per contribution toward an article's publication charge. Multiple
+-- authors/co-authors can each pay part of the same submission_id.
+create table if not exists article_payments (
+  id                  uuid primary key default gen_random_uuid(),
+  submission_id       uuid not null references article_submissions(id) on delete cascade,
+  contributor_name    text not null,
+  contributor_email   text not null,
+  amount              numeric(10,2) not null,
+  razorpay_order_id   text,
+  razorpay_payment_id text,
+  status              text not null default 'pending' check (status in ('pending', 'success', 'failed')),
+  created_at          timestamptz not null default now()
+);
+
+-- Author <-> editorial communication thread, scoped to one article.
+create table if not exists article_messages (
+  id            uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references article_submissions(id) on delete cascade,
+  sender        text not null check (sender in ('admin', 'author')),
+  message       text not null,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists idx_article_co_authors_submission on article_co_authors (submission_id);
+create index if not exists idx_article_payments_submission on article_payments (submission_id);
+create index if not exists idx_article_messages_submission on article_messages (submission_id);
+alter table article_co_authors enable row level security;
+alter table article_payments enable row level security;
+alter table article_messages enable row level security;
 
 create index if not exists idx_issues_status on issues (status);
 create index if not exists idx_issues_slot_id on issues (slot_id);

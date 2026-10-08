@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const link = `${config.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
     await getNotifierAdapter().sendEmail({
       to: user.email,
-      subject: 'Reset your AgroVista Monthly password',
+      subject: 'Reset your AgriOxen Monthly password',
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
           <h2 style="color:#2B2A1F;">Reset your password</h2>

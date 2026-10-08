@@ -26,7 +26,7 @@ export async function runRazorpayCheckout(params: {
     key: params.order.keyId,
     amount: params.order.amount,
     currency: params.order.currency,
-    name: 'AgroVista',
+    name: 'AgriOxen',
     description: params.description,
     order_id: params.order.orderId,
     prefill: { email: params.prefillEmail },
@@ -70,7 +70,7 @@ export async function runRazorpayMandateCheckout(params: {
   const rzp = new window.Razorpay({
     key: params.mandate.keyId,
     subscription_id: params.mandate.subscriptionId,
-    name: 'AgroVista',
+    name: 'AgriOxen',
     description: params.description,
     prefill: { email: params.prefillEmail },
     theme: { color: '#4C7A3F' },

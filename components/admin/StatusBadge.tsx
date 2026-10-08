@@ -17,13 +17,18 @@ const STATUS_VARIANT: Record<string, string> = {
   out_for_delivery: 'warning',
   under_review: 'warning',
   resubmitted: 'warning',
-  revision_requested: 'warning',
+  revision_required: 'warning',
   return_requested: 'warning',
   refund_initiated: 'warning',
   refund_processing: 'warning',
   reissue_initiated: 'warning',
   new_copy_dispatched: 'warning',
-  reissue_delivered: 'success'
+  reissue_delivered: 'success',
+  submitted: 'warning',
+  payment_pending: 'warning',
+  partially_paid: 'primary',
+  payment_completed: 'success',
+  scheduled: 'primary'
 };
 
 export default function StatusBadge({ status }: { status: string }) {

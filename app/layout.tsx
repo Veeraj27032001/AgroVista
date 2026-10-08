@@ -3,9 +3,9 @@ import Script from 'next/script';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
-  title: 'AgroVista Monthly — Agriculture Industry E-Magazine',
+  title: 'AgriOxen Monthly — Agriculture Industry E-Magazine',
   description:
-    'AgroVista Monthly is a paid monthly e-magazine covering technology, markets, sustainability and people shaping the agriculture industry. Sign in and unlock any issue to read online.'
+    'AgriOxen Monthly is a paid monthly e-magazine covering technology, markets, sustainability and people shaping the agriculture industry. Sign in and unlock any issue to read online.'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

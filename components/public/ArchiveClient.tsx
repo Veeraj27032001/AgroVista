@@ -20,7 +20,7 @@ function cardHtml(issue: Issue) {
           <span className="issue-card-tag">{issue.categoryName || issue.language}</span>
           <a href={`/issues/${issue.id}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgroVista'} alt={issue.title} />
+            <img src={issue.posterUrl || 'https://placehold.co/600x800/4C7A3F/ffffff?text=AgriOxen'} alt={issue.title} />
           </a>
         </div>
         <div className="issue-card-body">

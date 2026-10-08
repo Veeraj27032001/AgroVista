@@ -19,7 +19,19 @@ export type OrderStatus =
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
 export type ReturnStatus = 'pending' | 'reviewed' | 'actioned';
 export type ReturnAction = 'reissue' | 'refund' | 'reject';
-export type SubmissionStatus = 'submitted' | 'under_review' | 'revision_requested' | 'resubmitted' | 'accepted';
+export type SubmissionStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'revision_required'
+  | 'resubmitted'
+  | 'accepted'
+  | 'rejected'
+  | 'payment_pending'
+  | 'partially_paid'
+  | 'payment_completed'
+  | 'scheduled'
+  | 'published';
 export type DiscountType = 'flat' | 'percent';
 export type CouponUsageType = 'one_time' | 'recurring';
 
@@ -183,14 +195,100 @@ export type ArticleSubmission = {
   adminNote: string | null;
   createdAt: string;
   updatedAt: string;
+  articleCode: string | null;
+  theme: string | null;
+  themeOther: string | null;
+  wordCount: number | null;
+  authorSalutation: string | null;
+  authorFirstName: string | null;
+  authorLastName: string | null;
+  authorEmail: string | null;
+  authorPhone: string | null;
+  authorAffiliation: string | null;
+  authorDesignation: string | null;
+  authorCity: string | null;
+  authorState: string | null;
+  authorCountry: string | null;
+  publicationCharge: number | null;
+  amountPaid: number;
+  contributionToken: string | null;
+  volumeNumber: number | null;
+  issueNumber: number | null;
+  publicationMonth: number | null;
+  publicationYear: number | null;
+  pageRange: string | null;
+  publishedDate: string | null;
+  articleUrl: string | null;
+  rejectReason: string | null;
 };
+
+export type ArticleCoAuthor = {
+  id: string;
+  submissionId: string;
+  position: number;
+  salutation: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  affiliation: string | null;
+  designation: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  createdAt: string;
+};
+
+export type ArticlePaymentStatus = 'pending' | 'success' | 'failed';
+
+export type ArticlePayment = {
+  id: string;
+  submissionId: string;
+  contributorName: string;
+  contributorEmail: string;
+  amount: number;
+  razorpayOrderId: string | null;
+  razorpayPaymentId: string | null;
+  status: ArticlePaymentStatus;
+  createdAt: string;
+};
+
+export type ArticleMessageSender = 'admin' | 'author';
+
+export type ArticleMessage = {
+  id: string;
+  submissionId: string;
+  sender: ArticleMessageSender;
+  message: string;
+  createdAt: string;
+};
+
+export const ARTICLE_THEMES = [
+  'Agriculture & Farming',
+  'Seed Science & Technology',
+  'Crop Production',
+  'Plant Breeding',
+  'Agricultural Engineering',
+  'Horticulture',
+  'Natural Farming',
+  'Organic Farming',
+  'Climate-Smart Agriculture',
+  'Agricultural Technology',
+  'AI & Digital Agriculture',
+  'Agricultural Entrepreneurship',
+  'Agri-Business',
+  'Government Schemes & Policies',
+  'Farmer Success Stories',
+  'Research & Innovation',
+  'Other'
+] as const;
 
 export type SubmissionVersion = {
   id: string;
   submissionId: string;
   versionNumber: number;
   wordPath: string;
-  pdfPath: string;
+  pdfPath: string | null;
   submittedBy: 'user' | 'admin';
   isAdminEdit: boolean;
   createdAt: string;
