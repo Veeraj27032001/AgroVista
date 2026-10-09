@@ -100,6 +100,24 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <div className="row g-3 mt-4">
+          {[
+            { href: '/account/submissions', icon: 'bi-journal-text', label: 'My Submissions' },
+            { href: '/account/purchases', icon: 'bi-collection', label: 'My Purchases' },
+            { href: '/account/orders', icon: 'bi-box-seam', label: 'Hard Copy Orders' },
+            { href: '/account/subscriptions', icon: 'bi-arrow-repeat', label: 'My Subscriptions' },
+            { href: '/account/payments', icon: 'bi-receipt', label: 'Payments & Invoices' },
+            { href: '/account/help-requests', icon: 'bi-life-preserver', label: 'Help Requests' }
+          ].map((link) => (
+            <div className="col-6 col-md-4 col-lg-2" key={link.href}>
+              <a href={link.href} className="quick-link-card">
+                <i className={`bi ${link.icon}`}></i>
+                <span>{link.label}</span>
+              </a>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

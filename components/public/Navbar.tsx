@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { getSession, logout, type SessionResponse } from '@/lib/client/session';
+import { useCart } from '@/lib/client/cart';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/#about', label: 'About' },
   { href: '/#categories', label: 'Categories' },
   { href: '/archive', label: 'Archive' },
+  { href: '/subscribe', label: 'Subscribe' },
   { href: '/#contact', label: 'Contact' }
 ];
 
@@ -16,6 +18,7 @@ export default function Navbar() {
   const [session, setSession] = useState<SessionResponse | null>(null);
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const cart = useCart();
 
   useEffect(() => {
     getSession()
@@ -58,6 +61,17 @@ export default function Navbar() {
             ))}
           </ul>
           <div className="ms-lg-3 mt-3 mt-lg-0 d-flex align-items-center gap-2">
+            <a href="/cart" className="position-relative d-inline-flex align-items-center text-decoration-none" style={{ color: 'var(--dark-color)' }}>
+              <i className="bi bi-cart3" style={{ fontSize: 20 }}></i>
+              {cart.length > 0 && (
+                <span
+                  className="position-absolute badge rounded-pill"
+                  style={{ top: -6, left: 14, background: 'var(--custom-btn-bg-color)', color: '#fff', fontSize: 10 }}
+                >
+                  {cart.length}
+                </span>
+              )}
+            </a>
             {session === null ? null : session.authenticated ? (
               <div className="dropdown">
                 <button
@@ -89,6 +103,31 @@ export default function Navbar() {
                   <li>
                     <a className="dropdown-item" href="/account/submissions">
                       <i className="bi bi-journal-text me-2"></i>My Submissions
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account/purchases">
+                      <i className="bi bi-collection me-2"></i>My Purchases
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account/orders">
+                      <i className="bi bi-box-seam me-2"></i>Hard Copy Orders
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account/subscriptions">
+                      <i className="bi bi-arrow-repeat me-2"></i>My Subscriptions
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account/payments">
+                      <i className="bi bi-receipt me-2"></i>Payments &amp; Invoices
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/account/help-requests">
+                      <i className="bi bi-life-preserver me-2"></i>Help Requests
                     </a>
                   </li>
                   {session.user?.role === 'admin' && (

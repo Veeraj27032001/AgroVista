@@ -18,7 +18,8 @@ import {
   ChevronRight,
   LayoutTemplate,
   LifeBuoy,
-  Settings
+  Settings,
+  Receipt
 } from 'lucide-react';
 
 const LINKS = [
@@ -32,6 +33,7 @@ const LINKS = [
   { href: '/admin/returns', label: 'Returns (legacy)', icon: Undo2 },
   { href: '/admin/support-requests', label: 'Help Requests', icon: LifeBuoy },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
+  { href: '/admin/invoices', label: 'Invoices', icon: Receipt },
   { href: '/admin/submissions', label: 'Submissions', icon: FileText },
   { href: '/admin/users', label: 'Users', icon: UserCog },
   { href: '/admin/settings', label: 'Settings', icon: Settings }

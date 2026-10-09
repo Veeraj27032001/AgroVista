@@ -97,3 +97,27 @@ PROFILE / ACCOUNT — scoped to /account pages only
   font-weight: var(--font-weight-medium);
   color: var(--dark-color);
 }
+
+.quick-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--white-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-medium);
+  padding: 20px 10px;
+  text-align: center;
+  color: var(--dark-color) !important;
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  height: 100%;
+  transition: all 0.2s ease;
+}
+.quick-link-card i { font-size: 22px; color: var(--primary-color); }
+.quick-link-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 10px 24px rgba(32,31,23,0.08);
+  transform: translateY(-2px);
+}

@@ -39,10 +39,16 @@ export default function Footer() {
               <a href="/archive">Archive</a>
             </p>
             <p>
+              <a href="/special-editions">Special Editions</a>
+            </p>
+            <p>
+              <a href="/subscribe">Subscribe</a>
+            </p>
+            <p>
               <a href="/submit-article">Submit Article</a>
             </p>
             <p className="mb-0">
-              <a href="/#contact">Contact</a>
+              <a href="/contact">Contact</a>
             </p>
           </div>
           <div className="col-lg-2 col-6">
