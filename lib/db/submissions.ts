@@ -19,6 +19,7 @@ type SubmissionRow = {
   word_count: number | null;
   author_salutation: string | null;
   author_first_name: string | null;
+  author_middle_name: string | null;
   author_last_name: string | null;
   author_email: string | null;
   author_phone: string | null;
@@ -35,6 +36,9 @@ type SubmissionRow = {
   publication_month: number | null;
   publication_year: number | null;
   page_range: string | null;
+  scheduled_issue_id: string | null;
+  page_from: number | null;
+  page_to: number | null;
   published_date: string | null;
   article_url: string | null;
   reject_reason: string | null;
@@ -57,6 +61,7 @@ const toSubmission = (r: SubmissionRow): ArticleSubmission => ({
   wordCount: r.word_count,
   authorSalutation: r.author_salutation,
   authorFirstName: r.author_first_name,
+  authorMiddleName: r.author_middle_name,
   authorLastName: r.author_last_name,
   authorEmail: r.author_email,
   authorPhone: r.author_phone,
@@ -73,6 +78,9 @@ const toSubmission = (r: SubmissionRow): ArticleSubmission => ({
   publicationMonth: r.publication_month,
   publicationYear: r.publication_year,
   pageRange: r.page_range,
+  scheduledIssueId: r.scheduled_issue_id,
+  pageFrom: r.page_from,
+  pageTo: r.page_to,
   publishedDate: r.published_date,
   articleUrl: r.article_url,
   rejectReason: r.reject_reason,
@@ -107,6 +115,7 @@ type CoAuthorRow = {
   position: number;
   salutation: string | null;
   first_name: string;
+  middle_name: string | null;
   last_name: string;
   email: string;
   phone: string | null;
@@ -124,6 +133,7 @@ const toCoAuthor = (r: CoAuthorRow): ArticleCoAuthor => ({
   position: r.position,
   salutation: r.salutation,
   firstName: r.first_name,
+  middleName: r.middle_name,
   lastName: r.last_name,
   email: r.email,
   phone: r.phone,
@@ -154,6 +164,7 @@ async function generateArticleCode(): Promise<string> {
 export type CoAuthorInput = {
   salutation?: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   email: string;
   phone?: string;
@@ -174,6 +185,7 @@ export async function createSubmission(params: {
   wordCount?: number;
   authorSalutation?: string;
   authorFirstName: string;
+  authorMiddleName?: string;
   authorLastName: string;
   authorEmail: string;
   authorPhone?: string;
@@ -198,6 +210,7 @@ export async function createSubmission(params: {
       word_count: params.wordCount ?? null,
       author_salutation: params.authorSalutation || null,
       author_first_name: params.authorFirstName,
+      author_middle_name: params.authorMiddleName || null,
       author_last_name: params.authorLastName,
       author_email: params.authorEmail,
       author_phone: params.authorPhone || null,
@@ -218,6 +231,7 @@ export async function createSubmission(params: {
       position: i + 1,
       salutation: c.salutation || null,
       first_name: c.firstName,
+      middle_name: c.middleName || null,
       last_name: c.lastName,
       email: c.email,
       phone: c.phone || null,
@@ -371,19 +385,37 @@ export async function rejectSubmission(id: string, reason: string): Promise<Arti
   return toSubmission(data as SubmissionRow);
 }
 
+/**
+ * Links an accepted/paid submission to a real issues(id) row (the FK, scheduled_issue_id —
+ * spec §7.6 step 4). volumeNumber/issueNumber/publicationMonth/publicationYear/pageRange are
+ * derived by the caller from that issue and kept in sync here purely for display
+ * compatibility with pages still reading the older plain-number fields.
+ */
 export async function scheduleSubmission(
   id: string,
-  fields: { volumeNumber: number; issueNumber: number; publicationMonth: number; publicationYear: number; pageRange?: string }
+  fields: {
+    issueId: string;
+    volumeNumber: number | null;
+    issueNumber: number | null;
+    publicationMonth: number | null;
+    publicationYear: number | null;
+    pageFrom?: number;
+    pageTo?: number;
+  }
 ): Promise<ArticleSubmission> {
+  const pageRange = fields.pageFrom && fields.pageTo ? `${fields.pageFrom}-${fields.pageTo}` : null;
   const { data, error } = await getSupabaseAdmin()
     .from('article_submissions')
     .update({
       status: 'scheduled',
+      scheduled_issue_id: fields.issueId,
       volume_number: fields.volumeNumber,
       issue_number: fields.issueNumber,
       publication_month: fields.publicationMonth,
       publication_year: fields.publicationYear,
-      page_range: fields.pageRange || null,
+      page_from: fields.pageFrom ?? null,
+      page_to: fields.pageTo ?? null,
+      page_range: pageRange,
       updated_at: new Date().toISOString()
     })
     .eq('id', id)

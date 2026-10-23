@@ -187,6 +187,15 @@ export async function getInvoice(id: string): Promise<Invoice | null> {
   return data ? toInvoice(data as Row) : null;
 }
 
+/** Finds the invoice issued for a given Razorpay payment, if the unified payments ledger recorded one. */
+export async function findInvoiceByRazorpayPaymentId(razorpayPaymentId: string): Promise<Invoice | null> {
+  const { data: payment } = await getSupabaseAdmin().from('payments').select('id').eq('razorpay_payment_id', razorpayPaymentId).maybeSingle();
+  if (!payment) return null;
+  const { data, error } = await getSupabaseAdmin().from('invoices').select('*').eq('payment_id', payment.id).maybeSingle();
+  if (error) throw error;
+  return data ? toInvoice(data as Row) : null;
+}
+
 export async function listInvoicesByEmail(email: string): Promise<Invoice[]> {
   const { data, error } = await getSupabaseAdmin().from('invoices').select('*').eq('billed_to_email', email).order('issued_at', { ascending: false });
   if (error) throw error;

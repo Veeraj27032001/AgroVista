@@ -1,5 +1,5 @@
 import '../globals.css';
-import { requireAdminOrRedirect } from '@/lib/auth';
+import { requireStaffOrRedirect } from '@/lib/auth';
 import Navbar from '@/components/public/Navbar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminBreadcrumbs from '@/components/admin/AdminBreadcrumbs';
@@ -7,7 +7,7 @@ import AdminBreadcrumbs from '@/components/admin/AdminBreadcrumbs';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireAdminOrRedirect();
+  const session = await requireStaffOrRedirect();
 
   return (
     <>
@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="pt-[90px]">
         <AdminBreadcrumbs />
         <div className="flex min-h-screen bg-paper">
-          <AdminSidebar />
+          <AdminSidebar role={session.role} />
           <div className="flex-1">
             <main className="p-6">{children}</main>
           </div>

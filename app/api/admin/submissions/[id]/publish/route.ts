@@ -16,7 +16,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const body = await req.json().catch(() => ({}));
-  const submission = await markSubmissionPublished(id, body.articleUrl ? String(body.articleUrl) : undefined);
+  const articleUrl = body.articleUrl ? String(body.articleUrl) : existing.scheduledIssueId ? `/issues/${existing.scheduledIssueId}` : undefined;
+  const submission = await markSubmissionPublished(id, articleUrl);
   await notifyPublished(submission);
   return NextResponse.json({ submission });
 }

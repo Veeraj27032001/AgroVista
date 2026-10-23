@@ -16,7 +16,11 @@ export default async function AdminDashboardPage() {
   ]);
 
   const activeSubscriptions = subscriptions.filter((s) => s.status === 'active').length;
-  const pendingOrders = orders.filter((o) => o.orderStatus === 'pending' || o.orderStatus === 'processing').length;
+  // Soft-copy orders have no physical fulfillment lifecycle, so they stay at
+  // order_status 'pending' forever even once fully paid and readable — only
+  // hard/both orders represent an actual shipment waiting to go out.
+  const hardCopyOrders = orders.filter((o) => o.format !== 'soft');
+  const pendingOrders = hardCopyOrders.filter((o) => o.orderStatus === 'pending' || o.orderStatus === 'processing').length;
   const openReturns = returns.filter((r) => r.status === 'pending').length;
   const pendingSubmissions = submissions.filter((s) => s.status === 'submitted' || s.status === 'resubmitted').length;
   const monthlyRevenue = orders
@@ -29,7 +33,7 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Total Users" value={users.length} />
         <StatCard label="Active Subscriptions" value={activeSubscriptions} />
-        <StatCard label="Pending Orders" value={pendingOrders} />
+        <StatCard label="Pending Hard Copy Orders" value={pendingOrders} />
         <StatCard label="Open Returns" value={openReturns} />
         <StatCard label="Pending Submissions" value={pendingSubmissions} />
         <StatCard label="Monthly Revenue" value={`₹${monthlyRevenue}`} />
@@ -37,9 +41,9 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 font-serif font-semibold text-ink">Recent Orders</h2>
+          <h2 className="mb-3 font-serif font-semibold text-ink">Recent Hard Copy Orders</h2>
           <div className="space-y-2">
-            {orders.slice(0, 6).map((o) => (
+            {hardCopyOrders.slice(0, 6).map((o) => (
               <div key={o.id} className="flex items-center justify-between rounded-lg border border-primary/10 px-3 py-2 text-sm">
                 <span>₹{o.amount}</span>
                 <Badge label={o.orderStatus} />

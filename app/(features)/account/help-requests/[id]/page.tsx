@@ -60,6 +60,21 @@ export default function HelpRequestDetailPage({ params }: { params: Promise<{ id
       <p className="mb-2 text-sm text-gray-500">{request.type.replace(/_/g, ' ')}</p>
       <p className="mb-4">{request.description}</p>
 
+      {request.attachmentKeys.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {request.attachmentKeys.map((_, i) => (
+            <a key={i} href={`/api/support-requests/${id}/attachment?index=${i}`} target="_blank" rel="noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/support-requests/${id}/attachment?index=${i}`}
+                alt={`Attachment ${i + 1}`}
+                className="h-20 w-20 rounded-lg border border-gray-200 object-cover"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+
       {request.resolution && (
         <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           <strong>Resolution:</strong> {request.resolution.replace(/_/g, ' ')}

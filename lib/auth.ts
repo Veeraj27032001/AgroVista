@@ -87,3 +87,26 @@ export async function requireAdminOrRedirect(): Promise<SessionUser> {
   if (session!.role !== 'admin') redirect('/unauthorized');
   return session as SessionUser;
 }
+
+/** Admin and Editor both review article submissions; everything else admin-only. */
+export function isStaffRole(role: Role): boolean {
+  return role === 'admin' || role === 'editor';
+}
+
+/** Admin or Editor may enter the /admin shell at all; individual pages narrow further with requireAdminOrRedirect(). */
+export async function requireStaffOrRedirect(): Promise<SessionUser> {
+  const { redirect } = await import('next/navigation');
+  const session = await getSession();
+  if (!session) redirect('/login?redirect=/admin');
+  if (session!.role !== 'admin' && session!.role !== 'editor') redirect('/unauthorized');
+  return session as SessionUser;
+}
+
+/** Article submission is gated to approved Authors and Admins — plain users must request Author status first. */
+export async function requireAuthorOrAdminOrRedirect(): Promise<SessionUser> {
+  const { redirect } = await import('next/navigation');
+  const session = await getSession();
+  if (!session) redirect('/login?redirect=/submit-article');
+  if (session!.role !== 'author' && session!.role !== 'admin') redirect('/become-author');
+  return session as SessionUser;
+}

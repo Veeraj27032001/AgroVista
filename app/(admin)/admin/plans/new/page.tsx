@@ -8,7 +8,8 @@ const DURATION_LABELS = [
   { label: 'Half Yearly', months: 6 },
   { label: 'Yearly', months: 12 },
   { label: '2 Year', months: 24 },
-  { label: '5 Year', months: 60 }
+  { label: '5 Year', months: 60 },
+  { label: '10 Year (Lifetime)', months: 120 }
 ];
 
 export default function NewPlanPage() {

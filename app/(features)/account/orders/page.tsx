@@ -29,12 +29,12 @@ export default function OrdersPage() {
         <div className="space-y-3">
           {orders.map((order) => (
             <div key={order.id} className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
-              <div>
+              <Link href={`/account/orders/${order.id}`} className="flex-1">
                 <p className="font-semibold">{order.issueTitle}</p>
                 <p className="text-sm text-gray-500">
                   {order.deliveryAddress}, {order.deliveryCity} {order.deliveryPincode}
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-3">
                 <Badge label={order.orderStatus} />
                 {order.orderStatus === 'delivered' && (

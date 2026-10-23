@@ -25,6 +25,7 @@ export default function IssueForm({
   const [softCopyRate, setSoftCopyRate] = useState(existing?.softCopyRate?.toString() || '');
   const [hardCopyRate, setHardCopyRate] = useState(existing?.hardCopyRate?.toString() || '');
   const [bothRate, setBothRate] = useState(existing?.bothRate?.toString() || '');
+  const [printStockTotal, setPrintStockTotal] = useState(existing?.printStockTotal?.toString() || '0');
   const [couponApplicable, setCouponApplicable] = useState(existing?.couponApplicable ?? true);
   const [status, setStatus] = useState(existing?.status || 'draft');
   const [isActive, setIsActive] = useState(existing?.isActive ?? true);
@@ -51,6 +52,7 @@ export default function IssueForm({
     if (softCopyRate) form.set('softCopyRate', softCopyRate);
     if (hardCopyRate) form.set('hardCopyRate', hardCopyRate);
     if (bothRate) form.set('bothRate', bothRate);
+    form.set('printStockTotal', printStockTotal || '0');
     form.set('couponApplicable', String(couponApplicable));
     form.set('status', status);
     if (existing) form.set('isActive', String(isActive));
@@ -185,6 +187,30 @@ export default function IssueForm({
           <input type="number" className="form-control" value={bothRate} onChange={(e) => setBothRate(e.target.value)} />
         </div>
       </div>
+
+      <div className="row g-3 mb-3">
+        <div className="col-md-4">
+          <label className="form-label">Hard Copy Stock (total printed)</label>
+          <input type="number" min={0} className="form-control" value={printStockTotal} onChange={(e) => setPrintStockTotal(e.target.value)} />
+        </div>
+        {existing && (
+          <>
+            <div className="col-md-4">
+              <label className="form-label">Reserved for Subscribers</label>
+              <input type="number" className="form-control" value={existing.printStockReservedSubs} disabled />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Sold</label>
+              <input type="number" className="form-control" value={existing.printStockSold} disabled />
+            </div>
+          </>
+        )}
+      </div>
+      {existing && existing.printStockTotal > 0 && (
+        <p className="text-muted small mb-3">
+          Available to sell: {Math.max(0, existing.printStockTotal - existing.printStockReservedSubs - existing.printStockSold)}
+        </p>
+      )}
 
       <div className="form-check mb-3">
         <input

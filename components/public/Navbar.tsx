@@ -95,16 +95,26 @@ export default function Navbar() {
                       <i className="bi bi-person me-2"></i>Profile
                     </a>
                   </li>
-                  <li>
-                    <a className="dropdown-item" href="/submit-article">
-                      <i className="bi bi-file-earmark-text me-2"></i>Submit Article
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="/account/submissions">
-                      <i className="bi bi-journal-text me-2"></i>My Submissions
-                    </a>
-                  </li>
+                  {session.user?.role === 'author' || session.user?.role === 'admin' ? (
+                    <>
+                      <li>
+                        <a className="dropdown-item" href="/submit-article">
+                          <i className="bi bi-file-earmark-text me-2"></i>Submit Article
+                        </a>
+                      </li>
+                      <li>
+                        <a className="dropdown-item" href="/account/submissions">
+                          <i className="bi bi-journal-text me-2"></i>My Submissions
+                        </a>
+                      </li>
+                    </>
+                  ) : (
+                    <li>
+                      <a className="dropdown-item" href="/become-author">
+                        <i className="bi bi-pencil-square me-2"></i>Become an Author
+                      </a>
+                    </li>
+                  )}
                   <li>
                     <a className="dropdown-item" href="/account/purchases">
                       <i className="bi bi-collection me-2"></i>My Purchases

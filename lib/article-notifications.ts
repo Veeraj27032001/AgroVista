@@ -91,7 +91,7 @@ export async function notifyScheduled(s: ArticleSubmission) {
     `Article scheduled for publication — ${s.articleCode}`,
     wrap(
       'Article Scheduled',
-      `<p><strong>${s.title}</strong> (${s.articleCode}) has been scheduled for publication — Volume ${s.volumeNumber}, Issue ${s.issueNumber}, ${s.publicationMonth}/${s.publicationYear}.</p>`
+      `<p><strong>${s.title}</strong> (${s.articleCode}) has been scheduled for publication — Volume ${s.volumeNumber}, Issue ${s.issueNumber} (${s.publicationYear})${s.pageRange ? `, pages ${s.pageRange}` : ''}.</p>`
     )
   );
 }

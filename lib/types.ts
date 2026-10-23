@@ -1,4 +1,4 @@
-export type Role = 'user' | 'admin';
+export type Role = 'user' | 'admin' | 'editor' | 'author';
 export type Format = 'soft' | 'hard' | 'both';
 export type IssueStatus = 'draft' | 'published';
 export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled';
@@ -100,6 +100,9 @@ export type Issue = {
   isActive: boolean;
   publishedAt: string | null;
   createdAt: string;
+  printStockTotal: number;
+  printStockReservedSubs: number;
+  printStockSold: number;
   /** Display-only, populated by listing/detail queries that join through volume/slot/category. */
   volumeNumber?: number | null;
   slotNumber?: number | null;
@@ -202,6 +205,7 @@ export type ArticleSubmission = {
   wordCount: number | null;
   authorSalutation: string | null;
   authorFirstName: string | null;
+  authorMiddleName: string | null;
   authorLastName: string | null;
   authorEmail: string | null;
   authorPhone: string | null;
@@ -218,6 +222,9 @@ export type ArticleSubmission = {
   publicationMonth: number | null;
   publicationYear: number | null;
   pageRange: string | null;
+  scheduledIssueId: string | null;
+  pageFrom: number | null;
+  pageTo: number | null;
   publishedDate: string | null;
   articleUrl: string | null;
   rejectReason: string | null;
@@ -230,6 +237,7 @@ export type ArticleCoAuthor = {
   position: number;
   salutation: string | null;
   firstName: string;
+  middleName: string | null;
   lastName: string;
   email: string;
   phone: string | null;

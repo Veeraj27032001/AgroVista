@@ -81,7 +81,7 @@ export default function AdminOrdersPage() {
     <div>
       <div className="d-flex align-items-center justify-content-between mb-4">
         <h1 className="mb-0" style={{ fontSize: 24 }}>
-          Orders
+          Hard Copy Orders
         </h1>
         <select className="form-select" style={{ width: 200 }} value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="">All statuses</option>

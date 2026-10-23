@@ -244,6 +244,9 @@ type IssueRow = {
   is_active: boolean;
   published_at: string | null;
   created_at: string;
+  print_stock_total: number;
+  print_stock_reserved_subs: number;
+  print_stock_sold: number;
 };
 
 type IssueRowWithMeta = IssueRow & {
@@ -272,6 +275,9 @@ function toIssue(r: IssueRow | IssueRowWithMeta): Issue {
     isActive: r.is_active,
     publishedAt: r.published_at,
     createdAt: r.created_at,
+    printStockTotal: r.print_stock_total,
+    printStockReservedSubs: r.print_stock_reserved_subs,
+    printStockSold: r.print_stock_sold,
     volumeNumber: withMeta.volumes?.volume_number ?? null,
     year: withMeta.volumes?.publication_years?.year ?? null,
     slotNumber: withMeta.issue_slots?.slot_number ?? null,
@@ -335,15 +341,29 @@ export async function listPublishedIssues(filters: IssueFilters = {}): Promise<{
 }
 
 export async function listAllIssuesForAdmin(): Promise<Issue[]> {
-  const { data, error } = await getSupabaseAdmin().from('issues').select('*').order('created_at', { ascending: false });
+  const { data, error } = await getSupabaseAdmin()
+    .from('issues')
+    .select('*, volumes(volume_number, publication_years(year)), issue_slots(slot_number)')
+    .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data as IssueRow[]).map(toIssue);
+  return (data as unknown as IssueRowWithMeta[]).map(toIssue);
 }
 
 export async function getIssue(id: string): Promise<Issue | null> {
   const { data, error } = await getSupabaseAdmin().from('issues').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
   return data ? toIssue(data as IssueRow) : null;
+}
+
+/** Single issue with volume/year/slot metadata resolved — for admin pickers (e.g. scheduling a submission into an issue). */
+export async function getIssueWithMeta(id: string): Promise<Issue | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('issues')
+    .select('*, volumes(volume_number, publication_years(year)), issue_slots(slot_number)')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? toIssue(data as unknown as IssueRowWithMeta) : null;
 }
 
 /** Server-only: includes the private PDF storage path. */
@@ -369,6 +389,7 @@ export type CreateIssueParams = {
   couponApplicable?: boolean;
   status?: 'draft' | 'published';
   isActive?: boolean;
+  printStockTotal?: number;
 };
 
 export async function createIssue(params: CreateIssueParams): Promise<Issue> {
@@ -389,7 +410,8 @@ export async function createIssue(params: CreateIssueParams): Promise<Issue> {
       both_rate: params.bothRate ?? null,
       coupon_applicable: params.couponApplicable ?? true,
       status: params.status || 'draft',
-      published_at: params.status === 'published' ? new Date().toISOString() : null
+      published_at: params.status === 'published' ? new Date().toISOString() : null,
+      print_stock_total: params.printStockTotal ?? 0
     })
     .select('*')
     .single();
@@ -417,10 +439,34 @@ export async function updateIssue(id: string, params: Partial<CreateIssueParams>
     if (params.status === 'published') patch.published_at = new Date().toISOString();
   }
   if (params.isActive !== undefined) patch.is_active = params.isActive;
+  if (params.printStockTotal !== undefined) patch.print_stock_total = params.printStockTotal;
 
   const { data, error } = await getSupabaseAdmin().from('issues').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return toIssue(data as IssueRow);
+}
+
+/** Copies available to sell right now: total minus what's reserved for subscribers minus what's already sold. */
+export function availablePrintStock(issue: Issue): number {
+  return issue.printStockTotal - issue.printStockReservedSubs - issue.printStockSold;
+}
+
+/** Atomic — call after a hard/both-format issue purchase is confirmed paid. */
+export async function incrementPrintStockSold(issueId: string, amount = 1): Promise<void> {
+  const { error } = await getSupabaseAdmin().rpc('increment_print_stock_sold', { p_issue_id: issueId, p_amount: amount });
+  if (error) throw error;
+}
+
+/** Reconciles the sold counter to an exact value — used when an admin sets a stock total on an issue that already has sales. */
+export async function setPrintStockSold(issueId: string, value: number): Promise<void> {
+  const { error } = await getSupabaseAdmin().from('issues').update({ print_stock_sold: value }).eq('id', issueId);
+  if (error) throw error;
+}
+
+/** Atomic — call once per hard/both subscriber auto-delivered a copy at publish time. */
+export async function incrementPrintStockReserved(issueId: string, amount = 1): Promise<void> {
+  const { error } = await getSupabaseAdmin().rpc('increment_print_stock_reserved', { p_issue_id: issueId, p_amount: amount });
+  if (error) throw error;
 }
 
 export async function deleteIssue(id: string): Promise<void> {

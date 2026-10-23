@@ -1,6 +1,6 @@
 import type { Format } from '@/lib/types';
 
-export type FormatOption = { format: Format; label: string; price: number | null };
+export type FormatOption = { format: Format; label: string; price: number | null; outOfStock?: boolean };
 
 export default function FormatSelector({
   options,
@@ -14,7 +14,7 @@ export default function FormatSelector({
   return (
     <div className="flex flex-wrap gap-3">
       {options.map((opt) => {
-        const disabled = opt.price === null;
+        const disabled = opt.price === null || opt.outOfStock;
         const selected = value === opt.format && !disabled;
         return (
           <button
@@ -31,7 +31,7 @@ export default function FormatSelector({
             }`}
           >
             <div className="font-semibold">{opt.label}</div>
-            <div>{opt.price === null ? 'Not available' : `₹${opt.price}`}</div>
+            <div>{opt.price === null ? 'Not available' : opt.outOfStock ? 'Sold Out' : `₹${opt.price}`}</div>
           </button>
         );
       })}

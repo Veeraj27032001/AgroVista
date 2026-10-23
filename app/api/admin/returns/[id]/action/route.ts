@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { actionReturnRequest, getOrder, getReturnRequest, updateOrderStatus } from '@/lib/db/orders';
 import { getPaymentAdapter } from '@/lib/adapters/payment';
+import { revokeEntitlementsForOrderItem } from '@/lib/db/entitlements';
 import type { ReturnAction } from '@/lib/types';
 
 /**
@@ -47,6 +48,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       razorpayRefundId: refund.id
     });
     await updateOrderStatus(returnRequest.orderId, 'refund_initiated');
+    // A refund on a "both" order paid back the digital half too — revoke the reading access it granted.
+    if (order.format === 'both') {
+      await revokeEntitlementsForOrderItem(order.id, 'refund');
+    }
     return NextResponse.json({ returnRequest: updated, refund });
   }
 

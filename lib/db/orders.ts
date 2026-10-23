@@ -82,10 +82,12 @@ export async function listAllOrders(status?: OrderStatus): Promise<IssueOrder[]>
 
 export type AdminOrderRow = IssueOrder & { userEmail: string; issueTitle: string };
 
+/** Only hard/both orders have a physical fulfillment lifecycle (order_status) worth managing here — pure soft-copy purchases are tracked by payment_status alone. */
 export async function listAllOrdersForAdmin(status?: OrderStatus): Promise<AdminOrderRow[]> {
   let query = getSupabaseAdmin()
     .from('issue_orders')
     .select('*, users(email), issues(title)')
+    .neq('format', 'soft')
     .order('created_at', { ascending: false });
   if (status) query = query.eq('order_status', status);
   const { data, error } = await query;
@@ -103,6 +105,14 @@ export async function getOrder(id: string): Promise<IssueOrder | null> {
   return data ? toOrder(data as OrderRow) : null;
 }
 
+export async function getOrderWithIssue(id: string): Promise<OrderWithIssue | null> {
+  const { data, error } = await getSupabaseAdmin().from('issue_orders').select('*, issues(title, poster_url)').eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const r = data as OrderRow & { issues: { title: string; poster_url: string | null } | null };
+  return { ...toOrder(r), issueTitle: r.issues?.title || 'Untitled issue', issuePosterUrl: r.issues?.poster_url || null };
+}
+
 /** Does this user already have a paid order granting soft-copy access to this issue? */
 export async function hasSoftCopyAccess(userId: string, issueId: string): Promise<boolean> {
   const { count, error } = await getSupabaseAdmin()
@@ -112,6 +122,38 @@ export async function hasSoftCopyAccess(userId: string, issueId: string): Promis
     .eq('issue_id', issueId)
     .eq('payment_status', 'paid')
     .in('format', ['soft', 'both']);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
+/**
+ * One-time (non-subscription-covered) paid hard/both orders for an issue — the
+ * basis for reconciling print_stock_sold when an admin sets/changes the stock
+ * total on an issue that already has sales. Subscription-covered copies are
+ * tracked separately via print_stock_reserved_subs, and those rows never carry
+ * a razorpay_order_id (unlike every genuine purchase), so that's what tells them apart.
+ */
+export async function countPaidHardCopyPurchases(issueId: string): Promise<number> {
+  const { count, error } = await getSupabaseAdmin()
+    .from('issue_orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('issue_id', issueId)
+    .eq('payment_status', 'paid')
+    .in('format', ['hard', 'both'])
+    .not('razorpay_order_id', 'is', null);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Does this user already have a paid (or subscription-covered) hard-copy order for this issue? */
+export async function hasHardCopyAccess(userId: string, issueId: string): Promise<boolean> {
+  const { count, error } = await getSupabaseAdmin()
+    .from('issue_orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('issue_id', issueId)
+    .eq('payment_status', 'paid')
+    .in('format', ['hard', 'both']);
   if (error) throw error;
   return (count ?? 0) > 0;
 }

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isStaffRole } from '@/lib/auth';
 import { createIssue, getSlot, listAllIssuesForAdmin, resolveSlotId, updateIssue } from '@/lib/db/catalog';
 import { uploadIssuePdf, uploadPoster } from '@/lib/storage';
 import { autoDeliverToHardCopySubscribers } from '@/lib/subscription';
 
+/** GET is staff-readable (Editors need the issue list to schedule accepted submissions into one); writes below stay admin-only. */
 export async function GET() {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  if (!session || !isStaffRole(session.role)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   return NextResponse.json({ issues: await listAllIssuesForAdmin() });
 }
 
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
     softCopyRate: form.get('softCopyRate') ? Number(form.get('softCopyRate')) : undefined,
     hardCopyRate: form.get('hardCopyRate') ? Number(form.get('hardCopyRate')) : undefined,
     bothRate: form.get('bothRate') ? Number(form.get('bothRate')) : undefined,
+    printStockTotal: form.get('printStockTotal') ? Number(form.get('printStockTotal')) : undefined,
     couponApplicable: form.get('couponApplicable') !== 'false',
     status: 'draft'
   });

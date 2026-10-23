@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isStaffRole } from '@/lib/auth';
 import { createSubmissionVersion, nextVersionNumber } from '@/lib/db/submissions';
 import { uploadAdminEditFile } from '@/lib/storage';
 
-/** POST /api/admin/submissions/[id]/upload-edit — multipart: word, pdf. Admin-only edited copy. */
+/** POST /api/admin/submissions/[id]/upload-edit — multipart: word, pdf. Admin/Editor edited copy. */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  if (!session || !isStaffRole(session.role)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const { id } = await params;
   const form = await req.formData();

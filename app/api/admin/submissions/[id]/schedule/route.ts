@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isStaffRole } from '@/lib/auth';
 import { getSubmission, scheduleSubmission } from '@/lib/db/submissions';
+import { getIssueWithMeta } from '@/lib/db/catalog';
 import { notifyScheduled } from '@/lib/article-notifications';
 
-/** POST /api/admin/submissions/[id]/schedule  { volumeNumber, issueNumber, publicationMonth, publicationYear, pageRange } */
+/** POST /api/admin/submissions/[id]/schedule  { issueId, pageFrom?, pageTo? } — links the submission to a real issues(id) row (spec §7.6 step 4). */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  if (!session || !isStaffRole(session.role)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const { id } = await params;
   const existing = await getSubmission(id);
@@ -16,17 +17,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const body = await req.json().catch(() => ({}));
-  const { volumeNumber, issueNumber, publicationMonth, publicationYear, pageRange } = body as Record<string, unknown>;
-  if (!volumeNumber || !issueNumber || !publicationMonth || !publicationYear) {
-    return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
-  }
+  const { issueId, pageFrom, pageTo } = body as Record<string, unknown>;
+  if (!issueId) return NextResponse.json({ error: 'missing_issue' }, { status: 400 });
+
+  const issue = await getIssueWithMeta(String(issueId));
+  if (!issue) return NextResponse.json({ error: 'issue_not_found' }, { status: 404 });
 
   const submission = await scheduleSubmission(id, {
-    volumeNumber: Number(volumeNumber),
-    issueNumber: Number(issueNumber),
-    publicationMonth: Number(publicationMonth),
-    publicationYear: Number(publicationYear),
-    pageRange: pageRange ? String(pageRange) : undefined
+    issueId: issue.id,
+    volumeNumber: issue.volumeNumber ?? null,
+    issueNumber: issue.slotNumber ?? null,
+    publicationMonth: null,
+    publicationYear: issue.year ?? null,
+    pageFrom: pageFrom ? Number(pageFrom) : undefined,
+    pageTo: pageTo ? Number(pageTo) : undefined
   });
   await notifyScheduled(submission);
   return NextResponse.json({ submission });

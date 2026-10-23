@@ -1,7 +1,7 @@
 import 'server-only';
 import { getActiveSubscriptionForUser } from './db/subscriptions';
 import { hasSoftCopyAccess, createSubscriptionCoveredOrder } from './db/orders';
-import { listActiveHardCopySubscriptions } from './db/catalog';
+import { incrementPrintStockReserved, listActiveHardCopySubscriptions } from './db/catalog';
 import { findUserById } from './db/users';
 import { getStateName } from './db/locations';
 import { hasActiveEntitlement } from './db/entitlements';
@@ -54,6 +54,9 @@ export async function autoDeliverToHardCopySubscribers(issue: Issue): Promise<vo
       deliveryPincode: user.pincode || undefined,
       deliveryPhone: user.phone || undefined
     });
+    if (sub.format === 'hard' || sub.format === 'both') {
+      await incrementPrintStockReserved(issue.id);
+    }
   }
 }
 
@@ -62,5 +65,6 @@ export const DURATION_LABEL_TO_MONTHS: Record<string, number> = {
   'Half Yearly': 6,
   Yearly: 12,
   '2 Year': 24,
-  '5 Year': 60
+  '5 Year': 60,
+  '10 Year (Lifetime)': 120
 };

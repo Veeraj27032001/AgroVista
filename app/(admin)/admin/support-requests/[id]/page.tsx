@@ -85,7 +85,18 @@ export default function AdminSupportRequestDetailPage({ params }: { params: Prom
       <p className="mb-3">{request.description}</p>
 
       {request.attachmentKeys.length > 0 && (
-        <p className="text-muted small mb-3">{request.attachmentKeys.length} photo(s) attached.</p>
+        <div className="mb-3 d-flex flex-wrap gap-2">
+          {request.attachmentKeys.map((_, i) => (
+            <a key={i} href={`/api/support-requests/${id}/attachment?index=${i}`} target="_blank" rel="noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/support-requests/${id}/attachment?index=${i}`}
+                alt={`Attachment ${i + 1}`}
+                style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-color)' }}
+              />
+            </a>
+          ))}
+        </div>
       )}
 
       {open && (

@@ -134,8 +134,7 @@ export default function SubmissionDetailPage({ params }: { params: Promise<{ id:
 
       {submission.status === 'published' && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-          Published — Volume {submission.volumeNumber}, Issue {submission.issueNumber}, {submission.publicationMonth}/
-          {submission.publicationYear}
+          Published — Volume {submission.volumeNumber}, Issue {submission.issueNumber} ({submission.publicationYear})
           {submission.pageRange ? `, pages ${submission.pageRange}` : ''}
           {submission.articleUrl && (
             <>

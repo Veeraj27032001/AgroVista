@@ -55,9 +55,27 @@ create table if not exists users (
   taluk_id      uuid references taluks(id) on delete set null,
   city          text,
   pincode       text,
-  role          text not null default 'user' check (role in ('user', 'admin')),
+  role          text not null default 'user' check (role in ('user', 'admin', 'editor', 'author')),
   created_at    timestamptz not null default now()
 );
+alter table users drop constraint if exists users_role_check;
+alter table users add constraint users_role_check check (role in ('user', 'admin', 'editor', 'author'));
+
+-- A plain user requests Author status; an admin approves/rejects it before
+-- they can submit articles (submission rights are gated on role = 'author').
+create table if not exists author_requests (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references users(id) on delete cascade,
+  status      text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  note        text,
+  admin_note  text,
+  reviewed_by uuid references users(id),
+  reviewed_at timestamptz,
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_author_requests_user on author_requests (user_id);
+create index if not exists idx_author_requests_status on author_requests (status);
+alter table author_requests enable row level security;
 
 -- Safe to re-run against a users table that already existed with the old
 -- free-text state column, or without these columns at all.
@@ -264,6 +282,7 @@ alter table article_submissions add column if not exists theme_other text;
 alter table article_submissions add column if not exists word_count integer;
 alter table article_submissions add column if not exists author_salutation text;
 alter table article_submissions add column if not exists author_first_name text;
+alter table article_submissions add column if not exists author_middle_name text;
 alter table article_submissions add column if not exists author_last_name text;
 alter table article_submissions add column if not exists author_email text;
 alter table article_submissions add column if not exists author_phone text;
@@ -316,6 +335,7 @@ create table if not exists article_co_authors (
   position      integer not null default 1,
   salutation    text,
   first_name    text not null,
+  middle_name   text,
   last_name     text not null,
   email         text not null,
   phone         text,
@@ -326,6 +346,7 @@ create table if not exists article_co_authors (
   country       text default 'India',
   created_at    timestamptz not null default now()
 );
+alter table article_co_authors add column if not exists middle_name text;
 
 -- One row per contribution toward an article's publication charge. Multiple
 -- authors/co-authors can each pay part of the same submission_id.
@@ -466,6 +487,18 @@ alter table issues add column if not exists print_stock_sold integer not null de
 alter table issues add column if not exists bundle_price_paise integer;
 alter table issues add column if not exists included_in_subscription boolean not null default true;
 create unique index if not exists idx_issues_sequence on issues (sequence) where sequence is not null;
+
+-- Atomic stock decrement for hard-copy issue purchases (p_amount is negative to decrement).
+create or replace function increment_print_stock_sold(p_issue_id uuid, p_amount integer)
+returns void as $$
+  update issues set print_stock_sold = print_stock_sold + p_amount where id = p_issue_id;
+$$ language sql;
+
+-- Copies pre-committed to hard/both subscribers at publish time, before any sale.
+create or replace function increment_print_stock_reserved(p_issue_id uuid, p_amount integer)
+returns void as $$
+  update issues set print_stock_reserved_subs = print_stock_reserved_subs + p_amount where id = p_issue_id;
+$$ language sql;
 
 -- Entitlements: the single source of truth for "can this user read this issue".
 create table if not exists entitlements (
@@ -844,6 +877,28 @@ create table if not exists article_status_history (
   note          text,
   occurred_at   timestamptz not null default now()
 );
+
+-- Platform -> author payouts (the OPPOSITE direction from article_payments,
+-- which is author -> platform publication charge). Razorpay's Orders API
+-- only handles inbound charges; outbound payouts need RazorpayX Payouts,
+-- which isn't configured here — so this is an admin-recorded ledger: the
+-- admin actually sends the money via their own banking/UPI, then records it
+-- here for tracking and to trigger the notification email.
+create table if not exists author_payouts (
+  id              uuid primary key default gen_random_uuid(),
+  submission_id   uuid not null references article_submissions(id) on delete cascade,
+  recipient_name  text not null,
+  recipient_email text not null,
+  amount          numeric(10, 2) not null,
+  method          text check (method in ('upi', 'bank_transfer', 'other')),
+  reference_note  text,
+  status          text not null default 'pending' check (status in ('pending', 'paid')),
+  paid_by         uuid references users(id),
+  paid_at         timestamptz,
+  created_at      timestamptz not null default now()
+);
+create index if not exists idx_author_payouts_submission on author_payouts (submission_id);
+alter table author_payouts enable row level security;
 
 -- Platform-wide settings, tax rates, email/audit logs (spec §3.11).
 create table if not exists settings (

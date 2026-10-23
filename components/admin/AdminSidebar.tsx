@@ -19,29 +19,33 @@ import {
   LayoutTemplate,
   LifeBuoy,
   Settings,
-  Receipt
+  Receipt,
+  PenSquare
 } from 'lucide-react';
+import type { Role } from '@/lib/types';
 
 const LINKS = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/content', label: 'Home Page Content', icon: LayoutTemplate },
-  { href: '/admin/issues', label: 'Issues', icon: BookOpen },
-  { href: '/admin/categories', label: 'Categories', icon: Tag },
-  { href: '/admin/plans', label: 'Plans', icon: CreditCard },
-  { href: '/admin/subscriptions', label: 'Subscriptions', icon: Users },
-  { href: '/admin/orders', label: 'Orders', icon: Package },
-  { href: '/admin/returns', label: 'Returns (legacy)', icon: Undo2 },
-  { href: '/admin/support-requests', label: 'Help Requests', icon: LifeBuoy },
-  { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
-  { href: '/admin/invoices', label: 'Invoices', icon: Receipt },
-  { href: '/admin/submissions', label: 'Submissions', icon: FileText },
-  { href: '/admin/users', label: 'Users', icon: UserCog },
-  { href: '/admin/settings', label: 'Settings', icon: Settings }
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
+  { href: '/admin/content', label: 'Home Page Content', icon: LayoutTemplate, adminOnly: true },
+  { href: '/admin/issues', label: 'Issues', icon: BookOpen, adminOnly: true },
+  { href: '/admin/categories', label: 'Categories', icon: Tag, adminOnly: true },
+  { href: '/admin/plans', label: 'Plans', icon: CreditCard, adminOnly: true },
+  { href: '/admin/subscriptions', label: 'Subscriptions', icon: Users, adminOnly: true },
+  { href: '/admin/orders', label: 'Hard Copy Orders', icon: Package, adminOnly: true },
+  { href: '/admin/returns', label: 'Returns (legacy)', icon: Undo2, adminOnly: true },
+  { href: '/admin/support-requests', label: 'Help Requests', icon: LifeBuoy, adminOnly: true },
+  { href: '/admin/coupons', label: 'Coupons', icon: Ticket, adminOnly: true },
+  { href: '/admin/invoices', label: 'Invoices', icon: Receipt, adminOnly: true },
+  { href: '/admin/submissions', label: 'Submissions', icon: FileText, adminOnly: false },
+  { href: '/admin/authors', label: 'Authors', icon: PenSquare, adminOnly: true },
+  { href: '/admin/users', label: 'Users', icon: UserCog, adminOnly: true },
+  { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true }
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ role }: { role: Role }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const links = LINKS.filter((l) => !l.adminOnly || role === 'admin');
 
   useEffect(() => {
     try {
@@ -72,7 +76,7 @@ export default function AdminSidebar() {
         </button>
       </div>
       <nav className="space-y-1 px-2">
-        {LINKS.map(({ href, label, icon: Icon }) => {
+        {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== '/admin' && pathname.startsWith(href));
           return (
             <Link

@@ -45,7 +45,9 @@ export default function Footer() {
               <a href="/subscribe">Subscribe</a>
             </p>
             <p>
-              <a href="/submit-article">Submit Article</a>
+              <a href={session?.user?.role === 'author' || session?.user?.role === 'admin' ? '/submit-article' : '/become-author'}>
+                {session?.user?.role === 'author' || session?.user?.role === 'admin' ? 'Submit Article' : 'Become an Author'}
+              </a>
             </p>
             <p className="mb-0">
               <a href="/contact">Contact</a>

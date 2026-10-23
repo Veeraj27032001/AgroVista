@@ -103,7 +103,9 @@ export default function ProfilePage() {
 
         <div className="row g-3 mt-4">
           {[
-            { href: '/account/submissions', icon: 'bi-journal-text', label: 'My Submissions' },
+            user.role === 'author' || user.role === 'admin'
+              ? { href: '/account/submissions', icon: 'bi-journal-text', label: 'My Submissions' }
+              : { href: '/become-author', icon: 'bi-pencil-square', label: 'Become an Author' },
             { href: '/account/purchases', icon: 'bi-collection', label: 'My Purchases' },
             { href: '/account/orders', icon: 'bi-box-seam', label: 'Hard Copy Orders' },
             { href: '/account/subscriptions', icon: 'bi-arrow-repeat', label: 'My Subscriptions' },

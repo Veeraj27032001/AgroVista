@@ -3,7 +3,7 @@ import { findOrderByRazorpayOrderId, markOrderPaid } from '@/lib/db/orders';
 import { cancelOtherActiveSubscriptions, findByRazorpayOrderId, findByRazorpaySubId, markSubscriptionActive } from '@/lib/db/subscriptions';
 import { recordCouponUsage } from '@/lib/db/coupons';
 import { grantEntitlement } from '@/lib/db/entitlements';
-import { getIssue } from '@/lib/db/catalog';
+import { getIssue, incrementPrintStockSold } from '@/lib/db/catalog';
 import { findUserById } from '@/lib/db/users';
 import { recordPaymentAndIssueInvoice } from '@/lib/invoice-flow';
 
@@ -21,6 +21,9 @@ export async function confirmIssueOrderByRazorpayOrderId(orderId: string, paymen
   if (order.couponId) await recordCouponUsage({ couponId: order.couponId, userId: order.userId, orderId: order.id });
   if (order.format === 'soft' || order.format === 'both') {
     await grantEntitlement({ userId: order.userId, issueId: order.issueId, source: 'purchase', orderItemId: order.id });
+  }
+  if (order.format === 'hard' || order.format === 'both') {
+    await incrementPrintStockSold(order.issueId);
   }
 
   const [user, issue] = await Promise.all([findUserById(order.userId), getIssue(order.issueId)]);

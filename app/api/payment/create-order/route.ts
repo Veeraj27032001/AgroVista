@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getPaymentAdapter } from '@/lib/adapters/payment';
-import { getIssue } from '@/lib/db/catalog';
+import { availablePrintStock, getIssue } from '@/lib/db/catalog';
 import { getPlan, updatePlan } from '@/lib/db/subscriptions';
-import { createPendingOrder } from '@/lib/db/orders';
+import { createPendingOrder, hasHardCopyAccess } from '@/lib/db/orders';
 import { createSubscription } from '@/lib/db/subscriptions';
 import { validateCouponForPurchase } from '@/lib/coupons';
 import { findUserById, isProfileComplete } from '@/lib/db/users';
 import { getStateName } from '@/lib/db/locations';
-import { DURATION_LABEL_TO_MONTHS } from '@/lib/subscription';
+import { DURATION_LABEL_TO_MONTHS, hasPdfAccess } from '@/lib/subscription';
 import type { Format } from '@/lib/types';
 
 const RATE_FIELD: Record<Format, 'softCopyRate' | 'hardCopyRate' | 'bothRate'> = {
@@ -56,6 +56,18 @@ export async function POST(req: NextRequest) {
     if (basePrice === null) {
       return NextResponse.json({ error: 'invalid_format', message: 'This format is not available for this issue.' }, { status: 400 });
     }
+    if ((format === 'hard' || format === 'both') && availablePrintStock(issue) <= 0) {
+      return NextResponse.json({ error: 'out_of_stock', message: 'Hard copy stock for this issue is sold out.' }, { status: 400 });
+    }
+
+    // Don't let someone re-buy (or double-pay via "Both") a format they already own.
+    const [alreadyDigital, alreadyHard] = await Promise.all([hasPdfAccess(session.userId, issue), hasHardCopyAccess(session.userId, itemId)]);
+    if ((format === 'soft' || format === 'both') && alreadyDigital) {
+      return NextResponse.json({ error: 'already_owned', message: 'You already have digital access to this issue.' }, { status: 400 });
+    }
+    if ((format === 'hard' || format === 'both') && alreadyHard) {
+      return NextResponse.json({ error: 'already_owned', message: 'You already have a hard copy of this issue.' }, { status: 400 });
+    }
 
     let finalPrice = basePrice;
     let couponId: string | null = null;
@@ -80,7 +92,9 @@ export async function POST(req: NextRequest) {
       notes: { userId: session.userId, issueId: itemId, format }
     });
 
-    const deliveryState = user.stateId ? (await getStateName(user.stateId)) || undefined : undefined;
+    // Soft-copy-only purchases have nothing to ship — don't record a delivery address for them.
+    const needsDelivery = format === 'hard' || format === 'both';
+    const deliveryState = needsDelivery && user.stateId ? (await getStateName(user.stateId)) || undefined : undefined;
 
     await createPendingOrder({
       userId: session.userId,
@@ -90,12 +104,12 @@ export async function POST(req: NextRequest) {
       couponId,
       couponDiscount,
       razorpayOrderId: order.id,
-      deliveryName: user.name,
-      deliveryAddress: user.address || undefined,
-      deliveryCity: user.city || undefined,
+      deliveryName: needsDelivery ? user.name : undefined,
+      deliveryAddress: needsDelivery ? user.address || undefined : undefined,
+      deliveryCity: needsDelivery ? user.city || undefined : undefined,
       deliveryState,
-      deliveryPincode: user.pincode || undefined,
-      deliveryPhone: user.phone || undefined
+      deliveryPincode: needsDelivery ? user.pincode || undefined : undefined,
+      deliveryPhone: needsDelivery ? user.phone || undefined : undefined
     });
 
     return NextResponse.json({ orderId: order.id, amount: order.amount, currency: order.currency, keyId: payment.keyId });

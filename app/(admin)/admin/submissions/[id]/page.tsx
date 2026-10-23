@@ -2,7 +2,8 @@
 
 import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import type { ArticleCoAuthor, ArticleMessage, ArticlePayment, ArticleSubmission, SubmissionVersion } from '@/lib/types';
+import type { ArticleCoAuthor, ArticleMessage, ArticlePayment, ArticleSubmission, Issue, SubmissionVersion } from '@/lib/types';
+import type { AuthorPayout } from '@/lib/db/author-payouts';
 import StatusBadge from '@/components/admin/StatusBadge';
 
 type Detail = {
@@ -10,14 +11,15 @@ type Detail = {
   versions: SubmissionVersion[];
   coAuthors: ArticleCoAuthor[];
   payments: ArticlePayment[];
+  payouts: AuthorPayout[];
 };
 
-function Person({ label, salutation, first, last, email, phone, affiliation, designation, city, state, country }: Record<string, string | null | undefined>) {
+function Person({ label, salutation, first, middle, last, email, phone, affiliation, designation, city, state, country }: Record<string, string | null | undefined>) {
   return (
     <div className="mb-3">
       <div className="text-muted small text-uppercase mb-1">{label}</div>
       <div className="fw-semibold">
-        {salutation} {first} {last}
+        {salutation} {first} {middle} {last}
       </div>
       <div className="small text-muted">
         {email} {phone && `· ${phone}`}
@@ -38,9 +40,17 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [note, setNote] = useState('');
   const [charge, setCharge] = useState('');
   const [rejectReason, setRejectReason] = useState('');
-  const [schedule, setSchedule] = useState({ volumeNumber: '', issueNumber: '', publicationMonth: '', publicationYear: '', pageRange: '' });
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [scheduleIssueId, setScheduleIssueId] = useState('');
+  const [pageFrom, setPageFrom] = useState('');
+  const [pageTo, setPageTo] = useState('');
   const [articleUrl, setArticleUrl] = useState('');
   const [busy, setBusy] = useState(false);
+  const [payoutRecipient, setPayoutRecipient] = useState('');
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutMethod, setPayoutMethod] = useState<'upi' | 'bank_transfer' | 'other'>('upi');
+  const [payoutNote, setPayoutNote] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   function load() {
     fetch(`/api/admin/submissions/${id}`, { credentials: 'include' })
@@ -52,6 +62,14 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   }
 
   useEffect(load, [id]);
+  useEffect(() => {
+    fetch('/api/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => setIsAdmin(data.user?.role === 'admin'));
+    fetch('/api/admin/issues', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => setIssues(data.issues || []));
+  }, []);
 
   async function act(path: string, body?: Record<string, unknown>) {
     setBusy(true);
@@ -78,6 +96,22 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     setNote('');
   }
 
+  async function recordPayout() {
+    const recipient = recipients.find((r) => r.email === payoutRecipient);
+    if (!recipient || !payoutAmount) return;
+    const ok = await act('payouts', {
+      recipientName: recipient.name,
+      recipientEmail: recipient.email,
+      amount: Number(payoutAmount),
+      method: payoutMethod,
+      referenceNote: payoutNote
+    });
+    if (ok) {
+      setPayoutAmount('');
+      setPayoutNote('');
+    }
+  }
+
   function downloadUrl(path: string, isAdminEdit: boolean) {
     return `/api/admin/submissions/${id}/download?path=${encodeURIComponent(path)}&adminEdit=${isAdminEdit ? '1' : '0'}`;
   }
@@ -90,9 +124,14 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     );
   }
 
-  const { submission: s, versions, coAuthors, payments } = detail;
+  const { submission: s, versions, coAuthors, payments, payouts } = detail;
   const inReview = ['submitted', 'under_review', 'resubmitted'].includes(s.status);
   const balance = (s.publicationCharge || 0) - s.amountPaid;
+  const recipients = [
+    { email: s.authorEmail || '', name: [s.authorFirstName, s.authorLastName].filter(Boolean).join(' ') },
+    ...coAuthors.map((c) => ({ email: c.email, name: [c.firstName, c.lastName].filter(Boolean).join(' ') }))
+  ].filter((r) => r.email);
+  const canPayAuthor = isAdmin && ['payment_completed', 'scheduled', 'published'].includes(s.status);
 
   return (
     <div className="row g-4">
@@ -118,6 +157,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             label="Primary Author"
             salutation={s.authorSalutation}
             first={s.authorFirstName}
+            middle={s.authorMiddleName}
             last={s.authorLastName}
             email={s.authorEmail}
             phone={s.authorPhone}
@@ -133,6 +173,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               label={`Co-Author ${c.position}`}
               salutation={c.salutation}
               first={c.firstName}
+              middle={c.middleName}
               last={c.lastName}
               email={c.email}
               phone={c.phone}
@@ -160,7 +201,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
           </div>
         </div>
 
-        {inReview && (
+        {inReview && isAdmin && (
           <div className="admin-card mb-4">
             <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
               Editorial Decision
@@ -216,66 +257,37 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
               Schedule Publication
             </h2>
+            <p className="text-muted small mb-3">Link this article to the issue it will be published in.</p>
+            <div className="mb-3">
+              <label className="form-label">Issue</label>
+              <select className="form-select" value={scheduleIssueId} onChange={(e) => setScheduleIssueId(e.target.value)}>
+                <option value="">Select an issue…</option>
+                {issues.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.title} {i.volumeNumber ? `— Vol ${i.volumeNumber}, Issue ${i.slotNumber}` : ''} ({i.status})
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="row g-3">
-              <div className="col-md-3">
-                <label className="form-label">Volume</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  value={schedule.volumeNumber}
-                  onChange={(e) => setSchedule({ ...schedule, volumeNumber: e.target.value })}
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label">Issue</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  value={schedule.issueNumber}
-                  onChange={(e) => setSchedule({ ...schedule, issueNumber: e.target.value })}
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label">Month</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  min={1}
-                  max={12}
-                  value={schedule.publicationMonth}
-                  onChange={(e) => setSchedule({ ...schedule, publicationMonth: e.target.value })}
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label">Year</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  value={schedule.publicationYear}
-                  onChange={(e) => setSchedule({ ...schedule, publicationYear: e.target.value })}
-                />
+              <div className="col-md-6">
+                <label className="form-label">Page From</label>
+                <input className="form-control" type="number" value={pageFrom} onChange={(e) => setPageFrom(e.target.value)} />
               </div>
               <div className="col-md-6">
-                <label className="form-label">Page Range</label>
-                <input
-                  className="form-control"
-                  placeholder="e.g. 24-28"
-                  value={schedule.pageRange}
-                  onChange={(e) => setSchedule({ ...schedule, pageRange: e.target.value })}
-                />
+                <label className="form-label">Page To</label>
+                <input className="form-control" type="number" value={pageTo} onChange={(e) => setPageTo(e.target.value)} />
               </div>
             </div>
             <button
               type="button"
               className="btn custom-btn mt-3"
-              disabled={busy}
+              disabled={busy || !scheduleIssueId}
               onClick={() =>
                 act('schedule', {
-                  volumeNumber: Number(schedule.volumeNumber),
-                  issueNumber: Number(schedule.issueNumber),
-                  publicationMonth: Number(schedule.publicationMonth),
-                  publicationYear: Number(schedule.publicationYear),
-                  pageRange: schedule.pageRange
+                  issueId: scheduleIssueId,
+                  pageFrom: pageFrom ? Number(pageFrom) : undefined,
+                  pageTo: pageTo ? Number(pageTo) : undefined
                 })
               }
             >
@@ -284,13 +296,13 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
           </div>
         )}
 
-        {s.status === 'scheduled' && (
+        {s.status === 'scheduled' && isAdmin && (
           <div className="admin-card mb-4">
             <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
               Publish
             </h2>
             <p className="text-muted small">
-              Volume {s.volumeNumber}, Issue {s.issueNumber}, {s.publicationMonth}/{s.publicationYear}
+              Volume {s.volumeNumber}, Issue {s.issueNumber} ({s.publicationYear})
               {s.pageRange ? `, pages ${s.pageRange}` : ''}
             </p>
             <label className="form-label">Article URL (optional)</label>
@@ -354,6 +366,70 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             <p className="text-muted small">Publication charge not set yet.</p>
           )}
         </div>
+
+        {canPayAuthor && (
+          <div className="admin-card mt-4">
+            <h2 className="mb-1" style={{ fontSize: 16, fontWeight: 700 }}>
+              Pay Author(s)
+            </h2>
+            <p className="text-muted small mb-3">
+              Transfer the amount yourself via UPI/bank, then record it here — this is a ledger entry, not a live payout.
+            </p>
+
+            {payouts.length > 0 && (
+              <div className="mb-3">
+                {payouts.map((p) => (
+                  <div key={p.id} className="small border-bottom py-2">
+                    <div className="d-flex justify-content-between">
+                      <span>{p.recipientName}</span>
+                      <span className="badge rounded-pill text-bg-success">paid</span>
+                    </div>
+                    <div className="text-muted">
+                      {p.recipientEmail} · ₹{p.amount} · {p.method || '—'} · {new Date(p.createdAt).toLocaleDateString()}
+                    </div>
+                    {p.referenceNote && <div className="text-muted">{p.referenceNote}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mb-2">
+              <label className="form-label">Recipient</label>
+              <select className="form-select" value={payoutRecipient} onChange={(e) => setPayoutRecipient(e.target.value)}>
+                <option value="">Select…</option>
+                {recipients.map((r) => (
+                  <option key={r.email} value={r.email}>
+                    {r.name} ({r.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="row g-2 mb-2">
+              <div className="col-6">
+                <label className="form-label">Amount (₹)</label>
+                <input className="form-control" type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)} />
+              </div>
+              <div className="col-6">
+                <label className="form-label">Method</label>
+                <select className="form-select" value={payoutMethod} onChange={(e) => setPayoutMethod(e.target.value as typeof payoutMethod)}>
+                  <option value="upi">UPI</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <label className="form-label">Reference / Note</label>
+            <input className="form-control mb-3" value={payoutNote} onChange={(e) => setPayoutNote(e.target.value)} placeholder="UTR / transaction note" />
+            <button
+              type="button"
+              className="btn custom-btn w-100"
+              disabled={busy || !payoutRecipient || !payoutAmount}
+              onClick={recordPayout}
+            >
+              Record Payment
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

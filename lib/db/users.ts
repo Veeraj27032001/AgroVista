@@ -1,6 +1,6 @@
 import 'server-only';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import type { User } from '@/lib/types';
+import type { Role, User } from '@/lib/types';
 
 type UserRow = {
   id: string;
@@ -113,6 +113,12 @@ export async function updateUserProfile(
 export async function updateUserPasswordHash(id: string, passwordHash: string): Promise<void> {
   const { error } = await getSupabaseAdmin().from('users').update({ password_hash: passwordHash }).eq('id', id);
   if (error) throw error;
+}
+
+export async function updateUserRole(id: string, role: Role): Promise<User> {
+  const { data, error } = await getSupabaseAdmin().from('users').update({ role }).eq('id', id).select('*').single();
+  if (error) throw error;
+  return toUser(data as UserRow);
 }
 
 /** Mandatory for ordering/delivery — enforced at checkout regardless of how the account was created. */
