@@ -110,9 +110,11 @@ export async function listSupportRequestsForUser(userId: string): Promise<Suppor
 export type SupportRequestWithUser = SupportRequest & { userEmail: string };
 
 export async function listAllSupportRequestsWithUser(): Promise<SupportRequestWithUser[]> {
+  // Explicit FK hint required: support_requests has two FKs to users (user_id, handled_by),
+  // so a plain "users(...)" embed is ambiguous.
   const { data, error } = await getSupabaseAdmin()
     .from('support_requests')
-    .select('*, users(email)')
+    .select('*, users!support_requests_user_id_fkey(email)')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data as (Row & { users: { email: string } | null })[]).map((r) => ({ ...toRequest(r), userEmail: r.users?.email || '' }));
