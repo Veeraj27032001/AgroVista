@@ -109,7 +109,7 @@ export default function ProfilePage() {
               ? { href: '/account/submissions', icon: 'bi-journal-text', label: 'My Submissions' }
               : { href: '/become-author', icon: 'bi-pencil-square', label: 'Become an Author' },
             { href: '/account/purchases', icon: 'bi-collection', label: 'My Purchases' },
-            { href: '/account/orders', icon: 'bi-box-seam', label: 'Hard Copy Orders' },
+            { href: '/account/orders', icon: 'bi-box-seam', label: 'Orders' },
             { href: '/account/subscriptions', icon: 'bi-arrow-repeat', label: 'My Subscriptions' },
             { href: '/account/payments', icon: 'bi-receipt', label: 'Payments & Invoices' },
             { href: '/account/help-requests', icon: 'bi-life-preserver', label: 'Help Requests' }

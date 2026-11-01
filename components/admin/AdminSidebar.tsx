@@ -32,7 +32,7 @@ const LINKS = [
   { href: '/admin/categories', label: 'Categories', icon: Tag, adminOnly: true },
   { href: '/admin/plans', label: 'Plans', icon: CreditCard, adminOnly: true },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: Users, adminOnly: true },
-  { href: '/admin/orders', label: 'Hard Copy Orders', icon: Package, adminOnly: true },
+  { href: '/admin/orders', label: 'Orders', icon: Package, adminOnly: true },
   { href: '/admin/returns', label: 'Returns', icon: Undo2, adminOnly: true },
   { href: '/admin/support-requests', label: 'Help Requests', icon: LifeBuoy, adminOnly: true },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket, adminOnly: true },

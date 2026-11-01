@@ -18,7 +18,7 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Hard Copy Orders</h1>
+      <h1 className="mb-6 text-2xl font-bold">Orders</h1>
       {!orders ? (
         <div className="flex justify-center py-16">
           <Spinner />

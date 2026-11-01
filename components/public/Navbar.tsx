@@ -127,7 +127,7 @@ export default function Navbar() {
                   </li>
                   <li>
                     <a className="dropdown-item" href="/account/orders">
-                      <i className="bi bi-box-seam me-2"></i>Hard Copy Orders
+                      <i className="bi bi-box-seam me-2"></i>Orders
                     </a>
                   </li>
                   <li>

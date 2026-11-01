@@ -33,7 +33,7 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Total Users" value={users.length} />
         <StatCard label="Active Subscriptions" value={activeSubscriptions} />
-        <StatCard label="Pending Hard Copy Orders" value={pendingOrders} />
+        <StatCard label="Pending Orders" value={pendingOrders} />
         <StatCard label="Open Returns" value={openReturns} />
         <StatCard label="Pending Submissions" value={pendingSubmissions} />
         <StatCard label="Monthly Revenue" value={`₹${monthlyRevenue}`} />
@@ -41,7 +41,7 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 font-serif font-semibold text-ink">Recent Hard Copy Orders</h2>
+          <h2 className="mb-3 font-serif font-semibold text-ink">Recent Orders</h2>
           <div className="space-y-2">
             {hardCopyOrders.slice(0, 6).map((o) => (
               <div key={o.id} className="flex items-center justify-between rounded-lg border border-primary/10 px-3 py-2 text-sm">

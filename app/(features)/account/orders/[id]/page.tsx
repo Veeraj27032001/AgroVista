@@ -52,7 +52,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       <div className="mb-6 flex items-center justify-between">
         <div>
           <Link href="/account/orders" className="text-sm text-primary">
-            ← Back to Hard Copy Orders
+            ← Back to Orders
           </Link>
           <h1 className="mt-1 text-2xl font-bold">Order Details</h1>
         </div>

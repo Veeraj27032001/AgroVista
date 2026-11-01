@@ -87,7 +87,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     <div>
       <div className="admin-card mb-4">
         <Link href="/admin/orders" className="small text-muted d-inline-block mb-2">
-          ← Back to Hard Copy Orders
+          ← Back to Orders
         </Link>
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h1 className="mb-0" style={{ fontSize: 22 }}>
