@@ -20,6 +20,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
   if (!decision) return NextResponse.json({ error: 'invalid_decision' }, { status: 400 });
   const note = String(body.note || '').trim() || undefined;
+  if (decision === 'rejected' && !note) {
+    return NextResponse.json({ error: 'missing_note', message: 'Remarks are required when rejecting a request.' }, { status: 400 });
+  }
 
   const updated = await actionAuthorRequest(id, decision, session.userId, note);
   const user = await findUserById(existing.userId);

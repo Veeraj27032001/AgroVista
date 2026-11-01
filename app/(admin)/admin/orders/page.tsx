@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import Link from 'next/link';
 import type { AdminOrderRow } from '@/lib/db/orders';
 import type { OrderStatus } from '@/lib/types';
 import BootstrapTable, { type BsColumn } from '@/components/admin/BootstrapTable';
@@ -36,20 +36,6 @@ export default function AdminOrdersPage() {
 
   useEffect(load, [filter]);
 
-  async function updateStatus(order: AdminOrderRow, status: OrderStatus) {
-    const res = await fetch(`/api/admin/orders/${order.id}/status`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) {
-      toast.error('Could not update status.');
-      return;
-    }
-    load();
-  }
-
   const columns: BsColumn<AdminOrderRow>[] = [
     { key: 'user', header: 'User', render: (o) => o.userEmail },
     { key: 'issue', header: 'Issue', render: (o) => o.issueTitle },
@@ -57,22 +43,12 @@ export default function AdminOrdersPage() {
     { key: 'amount', header: 'Amount', render: (o) => `₹${o.amount}` },
     { key: 'status', header: 'Status', render: (o) => <StatusBadge status={o.orderStatus} /> },
     {
-      key: 'update',
-      header: 'Update',
+      key: 'actions',
+      header: '',
       render: (o) => (
-        <select
-          className="form-select form-select-sm"
-          style={{ width: 190 }}
-          value=""
-          onChange={(e) => e.target.value && updateStatus(o, e.target.value as OrderStatus)}
-        >
-          <option value="">Change status</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s.replace(/_/g, ' ')}
-            </option>
-          ))}
-        </select>
+        <Link href={`/admin/orders/${o.id}`} className="btn custom-btn custom-btn-secondary custom-btn-sm">
+          View
+        </Link>
       )
     }
   ];

@@ -253,6 +253,54 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
   return toOrder(data as OrderRow);
 }
 
+export type OrderStatusHistoryEntry = {
+  id: string;
+  orderId: string;
+  status: OrderStatus;
+  remarks: string;
+  changedBy: string | null;
+  changedByName: string | null;
+  createdAt: string;
+};
+
+type HistoryRow = {
+  id: string;
+  order_id: string;
+  status: OrderStatus;
+  remarks: string;
+  changed_by: string | null;
+  created_at: string;
+  users?: { name: string } | null;
+};
+
+/** Updates the order's status and appends a mandatory-remarks entry to its history — the one place order_status ever changes. */
+export async function recordOrderStatusChange(orderId: string, status: OrderStatus, remarks: string, changedBy: string): Promise<IssueOrder> {
+  const order = await updateOrderStatus(orderId, status);
+  const { error } = await getSupabaseAdmin()
+    .from('order_status_history')
+    .insert({ order_id: orderId, status, remarks, changed_by: changedBy });
+  if (error) throw error;
+  return order;
+}
+
+export async function listOrderStatusHistory(orderId: string): Promise<OrderStatusHistoryEntry[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('order_status_history')
+    .select('*, users(name)')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data as HistoryRow[]).map((r) => ({
+    id: r.id,
+    orderId: r.order_id,
+    status: r.status,
+    remarks: r.remarks,
+    changedBy: r.changed_by,
+    changedByName: r.users?.name ?? null,
+    createdAt: r.created_at
+  }));
+}
+
 // ---- return_requests ----
 
 type ReturnRow = {

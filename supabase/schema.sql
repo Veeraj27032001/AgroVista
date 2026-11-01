@@ -223,6 +223,19 @@ create table if not exists issue_orders (
   created_at          timestamptz not null default now()
 );
 
+-- Every fulfillment status change on a hard-copy order, with a mandatory remark —
+-- the admin Order Detail page shows this as the order's update history.
+create table if not exists order_status_history (
+  id          uuid primary key default gen_random_uuid(),
+  order_id    uuid not null references issue_orders(id) on delete cascade,
+  status      text not null,
+  remarks     text not null,
+  changed_by  uuid references users(id),
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_order_status_history_order on order_status_history (order_id);
+alter table order_status_history enable row level security;
+
 create table if not exists return_requests (
   id                 uuid primary key default gen_random_uuid(),
   order_id           uuid not null references issue_orders(id) on delete cascade,

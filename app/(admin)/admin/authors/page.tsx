@@ -11,6 +11,8 @@ export default function AdminAuthorsPage() {
   const [requests, setRequests] = useState<AuthorRequestWithUser[] | null>(null);
   const [authors, setAuthors] = useState<User[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<AuthorRequestWithUser | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
 
   function load() {
     fetch('/api/admin/authors', { credentials: 'include' })
@@ -23,11 +25,7 @@ export default function AdminAuthorsPage() {
 
   useEffect(load, []);
 
-  async function decide(id: string, decision: 'approved' | 'rejected') {
-    let note: string | undefined;
-    if (decision === 'rejected') {
-      note = window.prompt('Reason for rejecting this request (optional):') || undefined;
-    }
+  async function decide(id: string, decision: 'approved' | 'rejected', note?: string) {
     setBusyId(id);
     const res = await fetch(`/api/admin/authors/${id}/action`, {
       method: 'POST',
@@ -43,7 +41,15 @@ export default function AdminAuthorsPage() {
     }
     toast.success(decision === 'approved' ? 'Author approved.' : 'Request rejected.');
     setBusyId(null);
+    setRejectTarget(null);
+    setRejectNote('');
     load();
+  }
+
+  async function submitReject(e: React.FormEvent) {
+    e.preventDefault();
+    if (!rejectTarget || !rejectNote.trim()) return;
+    await decide(rejectTarget.id, 'rejected', rejectNote.trim());
   }
 
   const columns: BsColumn<AuthorRequestWithUser>[] = [
@@ -74,7 +80,10 @@ export default function AdminAuthorsPage() {
               type="button"
               className="btn custom-btn custom-btn-secondary custom-btn-sm"
               disabled={busyId === r.id}
-              onClick={() => decide(r.id, 'rejected')}
+              onClick={() => {
+                setRejectTarget(r);
+                setRejectNote('');
+              }}
             >
               Reject
             </button>
@@ -110,6 +119,30 @@ export default function AdminAuthorsPage() {
       <div className="admin-card">
         <BootstrapTable columns={columns} data={requests || []} loading={!requests} searchKeys={['userName', 'userEmail', 'status']} />
       </div>
+
+      {rejectTarget && (
+        <div className="admin-modal-backdrop" onClick={() => setRejectTarget(null)}>
+          <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h3 style={{ fontSize: 18 }} className="mb-0">
+                Reject Request
+              </h3>
+              <button type="button" className="btn-close" onClick={() => setRejectTarget(null)}></button>
+            </div>
+            <p className="text-muted small mb-3">{rejectTarget.userName || rejectTarget.userEmail}</p>
+            <form onSubmit={submitReject}>
+              <div className="mb-3">
+                <label className="form-label">Reason (required)</label>
+                <textarea className="form-control" rows={3} required autoFocus value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} />
+              </div>
+              <button type="submit" className="btn custom-btn-danger" disabled={busyId === rejectTarget.id || !rejectNote.trim()}>
+                {busyId === rejectTarget.id && <span className="btn-spinner"></span>}
+                Reject Request
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
