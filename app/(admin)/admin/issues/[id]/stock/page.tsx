@@ -10,6 +10,7 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
   const { id } = use(params);
   const [issue, setIssue] = useState<Issue | null>(null);
   const [transactions, setTransactions] = useState<StockTransaction[] | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [quantity, setQuantity] = useState('');
   const [note, setNote] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -26,19 +27,22 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
 
   useEffect(load, [id]);
 
-  function resetForm() {
+  function openAdd() {
+    setEditingId(null);
     setQuantity('');
     setNote('');
-    setEditingId(null);
+    setModalOpen(true);
   }
 
-  function startEdit(tx: StockTransaction) {
+  function openEdit(tx: StockTransaction) {
     setEditingId(tx.id);
     setQuantity(String(tx.quantity));
     setNote(tx.note || '');
+    setModalOpen(true);
   }
 
-  async function submit() {
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
     const q = Number(quantity);
     if (!q) {
       toast.error('Quantity cannot be zero.');
@@ -55,20 +59,20 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
-      toast.error(data.message || 'Could not save transaction.');
+      toast.error(data.message || 'Could not save.');
       return;
     }
-    toast.success(editingId ? 'Transaction updated.' : 'Stock added.');
-    resetForm();
+    toast.success(editingId ? 'Qty updated.' : 'Qty added.');
+    setModalOpen(false);
     load();
   }
 
   async function remove(txId: string) {
-    if (!window.confirm('Delete this stock transaction?')) return;
+    if (!window.confirm('Delete this stock entry?')) return;
     const res = await fetch(`/api/admin/issues/${id}/stock-transactions/${txId}`, { method: 'DELETE', credentials: 'include' });
     const data = await res.json();
     if (!res.ok) {
-      toast.error(data.message || 'Could not delete transaction.');
+      toast.error(data.message || 'Could not delete.');
       return;
     }
     toast.success('Deleted.');
@@ -92,9 +96,14 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
           <Link href={`/admin/issues/${id}`} className="small text-muted d-inline-block mb-2">
             ← Back to {issue.title}
           </Link>
-          <h1 className="mb-3" style={{ fontSize: 22 }}>
-            Hard Copy Stock
-          </h1>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h1 className="mb-0" style={{ fontSize: 22 }}>
+              Hard Copy Stock
+            </h1>
+            <button type="button" className="btn custom-btn custom-btn-sm" onClick={openAdd}>
+              <i className="bi bi-plus-lg me-1"></i>Add Qty
+            </button>
+          </div>
 
           <div className="row g-3 mb-4">
             <div className="col-6 col-md-3">
@@ -124,7 +133,7 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <h2 className="mb-2" style={{ fontSize: 16, fontWeight: 700 }}>
-            Transactions
+            Stock History
           </h2>
           {transactions.length === 0 ? (
             <p className="text-muted small">No stock added yet — this issue currently has 0 copies.</p>
@@ -151,7 +160,7 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
                       <td className="small text-muted">{t.note || '—'}</td>
                       <td className="small text-muted">{t.createdByName || '—'}</td>
                       <td className="text-end">
-                        <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm me-2" onClick={() => startEdit(t)}>
+                        <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm me-2" onClick={() => openEdit(t)}>
                           Edit
                         </button>
                         <button type="button" className="btn custom-btn-danger custom-btn-sm" onClick={() => remove(t.id)}>
@@ -164,39 +173,48 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
               </table>
             </div>
           )}
-
-          <h2 className="mb-2" style={{ fontSize: 16, fontWeight: 700 }}>
-            {editingId ? 'Edit Transaction' : 'Add Stock'}
-          </h2>
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">Quantity</label>
-              <input
-                className="form-control"
-                type="number"
-                placeholder="e.g. 500 or -10"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-              <div className="form-text">Positive to add copies, negative to correct/remove copies.</div>
-            </div>
-            <div className="col-md-8">
-              <label className="form-label">Note</label>
-              <input className="form-control" placeholder="e.g. First print run, 2nd batch, damaged copies written off…" value={note} onChange={(e) => setNote(e.target.value)} />
-            </div>
-          </div>
-          <div className="d-flex gap-2 mt-3">
-            <button type="button" className="btn custom-btn" disabled={busy || !quantity} onClick={submit}>
-              {editingId ? 'Save Changes' : 'Add Transaction'}
-            </button>
-            {editingId && (
-              <button type="button" className="btn custom-btn custom-btn-secondary" onClick={resetForm}>
-                Cancel
-              </button>
-            )}
-          </div>
         </div>
       </div>
+
+      {modalOpen && (
+        <div className="admin-modal-backdrop" onClick={() => setModalOpen(false)}>
+          <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h3 style={{ fontSize: 18 }} className="mb-0">
+                {editingId ? 'Update Qty' : 'Add Qty'}
+              </h3>
+              <button type="button" className="btn-close" onClick={() => setModalOpen(false)}></button>
+            </div>
+            <form onSubmit={submit}>
+              <div className="mb-3">
+                <label className="form-label">Quantity</label>
+                <input
+                  className="form-control"
+                  type="number"
+                  placeholder="e.g. 500 or -10"
+                  autoFocus
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+                <div className="form-text">Positive to add copies, negative to correct/remove copies.</div>
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Note</label>
+                <input
+                  className="form-control"
+                  placeholder="e.g. First print run, damaged copies written off…"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn custom-btn" disabled={busy || !quantity}>
+                {busy && <span className="btn-spinner"></span>}
+                {editingId ? 'Update Qty' : 'Add Qty'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
