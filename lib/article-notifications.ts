@@ -2,6 +2,7 @@ import 'server-only';
 import { getNotifierAdapter } from './adapters/notifier';
 import { config } from './config';
 import type { ArticleSubmission } from './types';
+import { listUsersByRoles } from './db/users';
 
 function send(to: string, subject: string, html: string) {
   return getNotifierAdapter().sendEmail({ to, subject, html });
@@ -129,6 +130,31 @@ export async function notifyPaymentExpired(s: ArticleSubmission) {
     wrap(
       'Payment Deadline Passed',
       `<p>The payment deadline for <strong>${s.title}</strong> (${s.articleCode}) has passed without the publication charge being fully paid. Please contact the editorial team if you still wish to proceed.</p>`
+    )
+  );
+}
+
+export async function notifyEditorAssigned(editorEmail: string, editorName: string, articleTitle: string, remarks: string) {
+  await send(
+    editorEmail,
+    `Article forwarded to you — ${articleTitle}`,
+    wrap(
+      'Article Assigned',
+      `<p>Hi ${editorName},</p><p>The article <strong>${articleTitle}</strong> has been forwarded to you for editing.</p><p style="background:#f6f2e7;padding:12px;border-radius:8px">${remarks}</p>`
+    )
+  );
+}
+
+/** Notifies every admin — there's no single fixed "the admin" account. */
+export async function notifySubmissionForwardedToAdmin(articleTitle: string) {
+  const admins = await listUsersByRoles(['admin']);
+  await Promise.all(
+    admins.map((a) =>
+      send(
+        a.email,
+        `Editor finished — ${articleTitle}`,
+        wrap('Ready for Review', `<p>The editor has forwarded <strong>${articleTitle}</strong> back — it's ready for your final review.</p>`)
+      )
     )
   );
 }

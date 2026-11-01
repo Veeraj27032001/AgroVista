@@ -28,6 +28,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const message = String(body.message || '').trim();
   if (!message) return NextResponse.json({ error: 'missing_message' }, { status: 400 });
 
-  const created = await createMessage(id, 'admin', message);
+  const created = await createMessage(id, session.role === 'editor' ? 'editor' : 'admin', message);
   return NextResponse.json({ message: created });
 }

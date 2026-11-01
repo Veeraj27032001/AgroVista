@@ -162,8 +162,8 @@ export default function SubmissionDetailPage({ params }: { params: Promise<{ id:
         <div className="mb-3 max-h-64 space-y-2 overflow-y-auto">
           {messages.length === 0 && <p className="text-sm text-gray-500">No messages yet.</p>}
           {messages.map((m) => (
-            <div key={m.id} className={`rounded-lg p-2 text-sm ${m.sender === 'admin' ? 'bg-primary-light' : 'bg-gray-100'}`}>
-              <span className="font-semibold">{m.sender === 'admin' ? 'Editor' : 'You'}:</span> {m.message}
+            <div key={m.id} className={`rounded-lg p-2 text-sm ${m.sender !== 'author' ? 'bg-primary-light' : 'bg-gray-100'}`}>
+              <span className="font-semibold">{m.sender !== 'author' ? 'Editorial Team' : 'You'}:</span> {m.message}
             </div>
           ))}
         </div>

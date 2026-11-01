@@ -39,6 +39,8 @@ type SubmissionRow = {
   scheduled_issue_id: string | null;
   page_from: number | null;
   page_to: number | null;
+  assigned_editor_id: string | null;
+  editor_forwarded_at: string | null;
   published_date: string | null;
   article_url: string | null;
   reject_reason: string | null;
@@ -81,6 +83,8 @@ const toSubmission = (r: SubmissionRow): ArticleSubmission => ({
   scheduledIssueId: r.scheduled_issue_id,
   pageFrom: r.page_from,
   pageTo: r.page_to,
+  assignedEditorId: r.assigned_editor_id,
+  editorForwardedAt: r.editor_forwarded_at,
   publishedDate: r.published_date,
   articleUrl: r.article_url,
   rejectReason: r.reject_reason,
@@ -439,6 +443,41 @@ export async function markSubmissionPublished(id: string, articleUrl?: string): 
     .single();
   if (error) throw error;
   return toSubmission(data as SubmissionRow);
+}
+
+/** Admin hands the submission off to a specific editor, with remarks posted to the message thread by the caller. */
+export async function assignEditor(id: string, editorId: string): Promise<ArticleSubmission> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .update({ assigned_editor_id: editorId, editor_forwarded_at: null, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return toSubmission(data as SubmissionRow);
+}
+
+/** Editor signals their edit is finished and ready for the admin to review again. */
+export async function forwardToAdmin(id: string): Promise<ArticleSubmission> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .update({ editor_forwarded_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return toSubmission(data as SubmissionRow);
+}
+
+/** Reverse lookup for the admin Issue page — every submission currently scheduled into this issue. */
+export async function listSubmissionsByScheduledIssue(issueId: string): Promise<ArticleSubmission[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .select('*')
+    .eq('scheduled_issue_id', issueId)
+    .order('page_from', { ascending: true });
+  if (error) throw error;
+  return (data as SubmissionRow[]).map(toSubmission);
 }
 
 export async function listVersionsForSubmission(submissionId: string): Promise<SubmissionVersion[]> {

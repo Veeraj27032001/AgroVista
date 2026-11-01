@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import type { Category, Issue } from '@/lib/types';
+import type { ArticleSubmission, Category, Issue } from '@/lib/types';
 
 export default function IssueForm({
   existing,
@@ -32,12 +32,18 @@ export default function IssueForm({
   const [poster, setPoster] = useState<File | null>(null);
   const [pdf, setPdf] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [linkedSubmissions, setLinkedSubmissions] = useState<ArticleSubmission[]>([]);
 
   useEffect(() => {
     fetch('/api/admin/categories', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => setCategories(data.categories || []));
-  }, []);
+    if (existing) {
+      fetch(`/api/admin/issues/${existing.id}/submissions`, { credentials: 'include' })
+        .then((r) => r.json())
+        .then((data) => setLinkedSubmissions(data.submissions || []));
+    }
+  }, [existing?.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -204,6 +210,30 @@ export default function IssueForm({
           <p className="small text-muted mb-0">Starts at 0 copies — save this issue first, then add stock from its Manage Stock page.</p>
         )}
       </div>
+
+      {existing && (
+        <div className="mb-3 p-3 border rounded">
+          <label className="form-label d-block mb-2">Linked Articles ({linkedSubmissions.length})</label>
+          {linkedSubmissions.length === 0 ? (
+            <p className="small text-muted mb-0">No submissions have been scheduled into this issue yet.</p>
+          ) : (
+            <div className="d-flex flex-column gap-1">
+              {linkedSubmissions.map((sub) => (
+                <a
+                  key={sub.id}
+                  href={`/admin/submissions/${sub.id}`}
+                  className="d-flex justify-content-between small border rounded px-2 py-1 text-decoration-none"
+                >
+                  <span>
+                    {sub.articleCode} — {sub.title}
+                  </span>
+                  <span className="text-muted">{sub.pageFrom && sub.pageTo ? `pp. ${sub.pageFrom}-${sub.pageTo}` : sub.status}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="form-check mb-3">
         <input

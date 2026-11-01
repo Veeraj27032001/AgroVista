@@ -225,6 +225,8 @@ export type ArticleSubmission = {
   scheduledIssueId: string | null;
   pageFrom: number | null;
   pageTo: number | null;
+  assignedEditorId: string | null;
+  editorForwardedAt: string | null;
   publishedDate: string | null;
   articleUrl: string | null;
   rejectReason: string | null;
@@ -263,7 +265,7 @@ export type ArticlePayment = {
   createdAt: string;
 };
 
-export type ArticleMessageSender = 'admin' | 'author';
+export type ArticleMessageSender = 'admin' | 'author' | 'editor';
 
 export type ArticleMessage = {
   id: string;

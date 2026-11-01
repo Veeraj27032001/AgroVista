@@ -385,6 +385,8 @@ create table if not exists article_messages (
   message       text not null,
   created_at    timestamptz not null default now()
 );
+alter table article_messages drop constraint if exists article_messages_sender_check;
+alter table article_messages add constraint article_messages_sender_check check (sender in ('admin', 'author', 'editor'));
 
 create index if not exists idx_article_co_authors_submission on article_co_authors (submission_id);
 create index if not exists idx_article_payments_submission on article_payments (submission_id);
@@ -862,6 +864,10 @@ alter table article_submissions add column if not exists page_from integer;
 alter table article_submissions add column if not exists page_to integer;
 alter table article_submissions add column if not exists withdrawn_at timestamptz;
 alter table article_submissions add column if not exists withdraw_reason text;
+-- Editor hand-off: who the admin forwarded this submission to, and whether
+-- that editor has since forwarded their finished edit back for admin sign-off.
+alter table article_submissions add column if not exists assigned_editor_id uuid references users(id);
+alter table article_submissions add column if not exists editor_forwarded_at timestamptz;
 
 -- Merges primary author + co-authors into one table (is_primary distinguishes
 -- them), per spec §3.10. The existing author_* columns on article_submissions

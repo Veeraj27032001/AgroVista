@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import type { ArticleCoAuthor, ArticleMessage, ArticlePayment, ArticleSubmission, Issue, SubmissionVersion } from '@/lib/types';
+import type { ArticleCoAuthor, ArticleMessage, ArticlePayment, ArticleSubmission, Issue, SubmissionVersion, User } from '@/lib/types';
 import type { AuthorPayout } from '@/lib/db/author-payouts';
 import StatusBadge from '@/components/admin/StatusBadge';
 
@@ -40,6 +40,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [note, setNote] = useState('');
   const [charge, setCharge] = useState('');
   const [rejectReason, setRejectReason] = useState('');
+  const [revisionNote, setRevisionNote] = useState('');
+  const [decisionModal, setDecisionModal] = useState<'accept' | 'reject' | 'revision' | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [scheduleIssueId, setScheduleIssueId] = useState('');
   const [pageFrom, setPageFrom] = useState('');
@@ -51,9 +53,16 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [payoutMethod, setPayoutMethod] = useState<'upi' | 'bank_transfer' | 'other'>('upi');
   const [payoutNote, setPayoutNote] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [myUserId, setMyUserId] = useState('');
+  const [isEditorRole, setIsEditorRole] = useState(false);
   const [editWord, setEditWord] = useState<File | null>(null);
   const [editPdf, setEditPdf] = useState<File | null>(null);
   const [uploadingEdit, setUploadingEdit] = useState(false);
+  const [editors, setEditors] = useState<User[]>([]);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assignEditorId, setAssignEditorId] = useState('');
+  const [assignRemarks, setAssignRemarks] = useState('');
+  const [forwardRemarks, setForwardRemarks] = useState('');
 
   function load() {
     fetch(`/api/admin/submissions/${id}`, { credentials: 'include' })
@@ -68,10 +77,17 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   useEffect(() => {
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json())
-      .then((data) => setIsAdmin(data.user?.role === 'admin'));
+      .then((data) => {
+        setIsAdmin(data.user?.role === 'admin');
+        setIsEditorRole(data.user?.role === 'editor');
+        setMyUserId(data.user?.id || '');
+      });
     fetch('/api/admin/issues', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => setIssues(data.issues || []));
+    fetch('/api/admin/users?roles=editor', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => setEditors(data.users || []));
   }, []);
 
   async function act(path: string, body?: Record<string, unknown>) {
@@ -97,6 +113,37 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     if (!note.trim()) return;
     await act('message', { message: note });
     setNote('');
+  }
+
+  async function submitDecision() {
+    let ok = false;
+    if (decisionModal === 'accept') {
+      if (!charge) return;
+      ok = await act('accept', { publicationCharge: Number(charge) });
+    } else if (decisionModal === 'reject') {
+      if (!rejectReason.trim()) return;
+      ok = await act('reject', { reason: rejectReason });
+    } else if (decisionModal === 'revision') {
+      if (!revisionNote.trim()) return;
+      ok = await act('review', { note: revisionNote });
+    }
+    if (ok) setDecisionModal(null);
+  }
+
+  async function submitAssignEditor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!assignEditorId || !assignRemarks.trim()) return;
+    const ok = await act('assign-editor', { editorId: assignEditorId, remarks: assignRemarks.trim() });
+    if (ok) {
+      setAssignModalOpen(false);
+      setAssignEditorId('');
+      setAssignRemarks('');
+    }
+  }
+
+  async function submitForwardToAdmin() {
+    const ok = await act('forward-to-admin', { remarks: forwardRemarks.trim() });
+    if (ok) setForwardRemarks('');
   }
 
   async function recordPayout() {
@@ -160,6 +207,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const canUploadEdit = ['accepted', 'payment_pending', 'partially_paid', 'payment_completed', 'scheduled', 'published'].includes(s.status);
 
   return (
+    <>
     <div className="row g-4">
       <div className="col-lg-8">
         <div className="admin-card mb-4">
@@ -225,6 +273,69 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               </div>
             ))}
           </div>
+
+          {canUploadEdit && (isAdmin || isEditorRole) && (
+            <div className="mt-4 pt-3 border-top">
+              <div className="text-muted small text-uppercase mb-2">Upload Final Version</div>
+              <div className="row g-2 mb-2">
+                <div className="col-md-6">
+                  <label className="form-label small">Word File</label>
+                  <input
+                    type="file"
+                    className="form-control form-control-sm"
+                    accept=".doc,.docx"
+                    onChange={(e) => setEditWord(e.target.files?.[0] || null)}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small">PDF File</label>
+                  <input
+                    type="file"
+                    className="form-control form-control-sm"
+                    accept=".pdf"
+                    onChange={(e) => setEditPdf(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn custom-btn custom-btn-sm"
+                disabled={uploadingEdit || !editWord || !editPdf}
+                onClick={uploadFinalVersion}
+              >
+                {uploadingEdit && <span className="btn-spinner"></span>}
+                Upload Final Version
+              </button>
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="mt-4 pt-3 border-top">
+              <div className="text-muted small text-uppercase mb-2">Editorial Assignment</div>
+              {s.assignedEditorId ? (
+                <p className="small mb-2">
+                  Assigned to: <strong>{editors.find((e) => e.id === s.assignedEditorId)?.name || 'Editor'}</strong>
+                  {s.editorForwardedAt && <span className="text-success"> — forwarded back {new Date(s.editorForwardedAt).toLocaleString()}</span>}
+                </p>
+              ) : (
+                <p className="small text-muted mb-2">Not yet forwarded to an editor.</p>
+              )}
+              <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm" onClick={() => setAssignModalOpen(true)}>
+                {s.assignedEditorId ? 'Re-forward to Editor' : 'Forward to Editor'}
+              </button>
+            </div>
+          )}
+
+          {isEditorRole && s.assignedEditorId === myUserId && !s.editorForwardedAt && (
+            <div className="mt-4 pt-3 border-top">
+              <div className="text-muted small text-uppercase mb-2">Your Assignment</div>
+              <label className="form-label small">Remarks for admin (optional)</label>
+              <input className="form-control form-control-sm mb-2" value={forwardRemarks} onChange={(e) => setForwardRemarks(e.target.value)} />
+              <button type="button" className="btn custom-btn custom-btn-sm" disabled={busy} onClick={submitForwardToAdmin}>
+                Forward to Admin
+              </button>
+            </div>
+          )}
         </div>
 
         {inReview && isAdmin && (
@@ -232,40 +343,33 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
               Editorial Decision
             </h2>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label">Publication Charge (₹) — for Accept</label>
-                <input className="form-control" type="number" value={charge} onChange={(e) => setCharge(e.target.value)} />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Reject Reason — for Reject</label>
-                <input className="form-control" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
-              </div>
-            </div>
-            <div className="d-flex flex-wrap gap-2 mt-3">
+            <div className="d-flex flex-wrap gap-2">
               <button
                 type="button"
                 className="btn custom-btn"
-                disabled={busy || !charge}
-                onClick={() => act('accept', { publicationCharge: Number(charge) })}
+                onClick={() => {
+                  setCharge('');
+                  setDecisionModal('accept');
+                }}
               >
                 Accept
               </button>
               <button
                 type="button"
                 className="btn custom-btn-danger"
-                disabled={busy || !rejectReason.trim()}
-                onClick={() => act('reject', { reason: rejectReason })}
+                onClick={() => {
+                  setRejectReason('');
+                  setDecisionModal('reject');
+                }}
               >
                 Reject
               </button>
               <button
                 type="button"
                 className="btn custom-btn custom-btn-secondary"
-                disabled={busy || !note.trim()}
-                onClick={async () => {
-                  await act('review', { note });
-                  setNote('');
+                onClick={() => {
+                  setRevisionNote('');
+                  setDecisionModal('revision');
                 }}
               >
                 Request Revision
@@ -274,7 +378,6 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                 Hold / Further Review
               </button>
             </div>
-            <p className="text-muted small mt-2">Revision note uses the message box below.</p>
           </div>
         )}
 
@@ -347,7 +450,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             {messages.length === 0 && <p className="text-muted small">No messages yet.</p>}
             {messages.map((m) => (
               <div key={m.id} className="small border rounded px-3 py-2 mb-2">
-                <strong>{m.sender === 'admin' ? 'Editor' : 'Author'}:</strong> {m.message}
+                <strong>{m.sender === 'admin' ? 'Admin' : m.sender === 'editor' ? 'Editor' : 'Author'}:</strong> {m.message}
               </div>
             ))}
           </div>
@@ -458,5 +561,82 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
         )}
       </div>
     </div>
+
+    {decisionModal && (
+      <div className="admin-modal-backdrop" onClick={() => setDecisionModal(null)}>
+        <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h3 style={{ fontSize: 18 }} className="mb-0">
+              {decisionModal === 'accept' ? 'Accept Submission' : decisionModal === 'reject' ? 'Reject Submission' : 'Request Revision'}
+            </h3>
+            <button type="button" className="btn-close" onClick={() => setDecisionModal(null)}></button>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitDecision();
+            }}
+          >
+            {decisionModal === 'accept' && (
+              <div className="mb-3">
+                <label className="form-label">Publication Charge (₹)</label>
+                <input className="form-control" type="number" required autoFocus value={charge} onChange={(e) => setCharge(e.target.value)} />
+              </div>
+            )}
+            {decisionModal === 'reject' && (
+              <div className="mb-3">
+                <label className="form-label">Reject Reason (required)</label>
+                <textarea className="form-control" rows={3} required autoFocus value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+              </div>
+            )}
+            {decisionModal === 'revision' && (
+              <div className="mb-3">
+                <label className="form-label">Revision Note (required)</label>
+                <textarea className="form-control" rows={3} required autoFocus value={revisionNote} onChange={(e) => setRevisionNote(e.target.value)} />
+              </div>
+            )}
+            <button type="submit" className={`btn ${decisionModal === 'reject' ? 'custom-btn-danger' : 'custom-btn'}`} disabled={busy}>
+              {busy && <span className="btn-spinner"></span>}
+              {decisionModal === 'accept' ? 'Accept' : decisionModal === 'reject' ? 'Reject' : 'Send Revision Request'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {assignModalOpen && (
+      <div className="admin-modal-backdrop" onClick={() => setAssignModalOpen(false)}>
+        <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h3 style={{ fontSize: 18 }} className="mb-0">
+              Forward to Editor
+            </h3>
+            <button type="button" className="btn-close" onClick={() => setAssignModalOpen(false)}></button>
+          </div>
+          <form onSubmit={submitAssignEditor}>
+            <div className="mb-3">
+              <label className="form-label">Editor</label>
+              <select className="form-select" required value={assignEditorId} onChange={(e) => setAssignEditorId(e.target.value)}>
+                <option value="">Select an editor…</option>
+                {editors.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name} ({e.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Remarks (required)</label>
+              <textarea className="form-control" rows={3} required autoFocus value={assignRemarks} onChange={(e) => setAssignRemarks(e.target.value)} />
+            </div>
+            <button type="submit" className="btn custom-btn" disabled={busy || !assignEditorId || !assignRemarks.trim()}>
+              {busy && <span className="btn-spinner"></span>}
+              Forward
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
