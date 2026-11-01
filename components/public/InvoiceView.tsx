@@ -1,12 +1,23 @@
 'use client';
 
+import { useEffect } from 'react';
 import type { Invoice } from '@/lib/db/invoices';
 
 function money(paise: number): string {
   return `₹${(paise / 100).toFixed(2)}`;
 }
 
-export default function InvoiceView({ invoice }: { invoice: Invoice }) {
+/**
+ * autoPrint is set only by /print/invoices/[id] — a bare page with no admin/account
+ * chrome around it, so printing from there captures just the invoice, not the
+ * surrounding sidebar/nav. The regular admin/account pages open that page in a new
+ * tab instead of calling window.print() on themselves.
+ */
+export default function InvoiceView({ invoice, autoPrint }: { invoice: Invoice; autoPrint?: boolean }) {
+  useEffect(() => {
+    if (autoPrint) window.print();
+  }, [autoPrint]);
+
   return (
     <div
       style={{
@@ -105,7 +116,11 @@ export default function InvoiceView({ invoice }: { invoice: Invoice }) {
       )}
 
       <div className="text-end mt-4 d-print-none">
-        <button type="button" className="btn custom-btn custom-btn-sm" onClick={() => window.print()}>
+        <button
+          type="button"
+          className="btn custom-btn custom-btn-sm"
+          onClick={() => (autoPrint ? window.print() : window.open(`/print/invoices/${invoice.id}`, '_blank'))}
+        >
           <i className="bi bi-printer me-1"></i>Print / Save as PDF
         </button>
       </div>
