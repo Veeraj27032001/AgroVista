@@ -87,7 +87,7 @@ async function generateInvoiceNumber(prefix: 'AGX' | 'AGX/CN'): Promise<string> 
   const db = getSupabaseAdmin();
   const likePattern = `${prefix}/${fy}/%`;
   const { count } = await db.from('invoices').select('*', { count: 'exact', head: true }).like('invoice_number', likePattern);
-  return `${prefix}/${fy}/${String((count ?? 0) + 1).padStart(5, '0')}`;
+  return `${prefix}/${fy}/${(count ?? 0) + 1}`;
 }
 
 /**

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Category, Issue } from '@/lib/types';
 
@@ -25,7 +26,6 @@ export default function IssueForm({
   const [softCopyRate, setSoftCopyRate] = useState(existing?.softCopyRate?.toString() || '');
   const [hardCopyRate, setHardCopyRate] = useState(existing?.hardCopyRate?.toString() || '');
   const [bothRate, setBothRate] = useState(existing?.bothRate?.toString() || '');
-  const [printStockTotal, setPrintStockTotal] = useState(existing?.printStockTotal?.toString() || '0');
   const [couponApplicable, setCouponApplicable] = useState(existing?.couponApplicable ?? true);
   const [status, setStatus] = useState(existing?.status || 'draft');
   const [isActive, setIsActive] = useState(existing?.isActive ?? true);
@@ -52,7 +52,6 @@ export default function IssueForm({
     if (softCopyRate) form.set('softCopyRate', softCopyRate);
     if (hardCopyRate) form.set('hardCopyRate', hardCopyRate);
     if (bothRate) form.set('bothRate', bothRate);
-    form.set('printStockTotal', printStockTotal || '0');
     form.set('couponApplicable', String(couponApplicable));
     form.set('status', status);
     if (existing) form.set('isActive', String(isActive));
@@ -188,29 +187,23 @@ export default function IssueForm({
         </div>
       </div>
 
-      <div className="row g-3 mb-3">
-        <div className="col-md-4">
-          <label className="form-label">Hard Copy Stock (total printed)</label>
-          <input type="number" min={0} className="form-control" value={printStockTotal} onChange={(e) => setPrintStockTotal(e.target.value)} />
-        </div>
-        {existing && (
+      <div className="mb-3 p-3 border rounded">
+        <label className="form-label d-block mb-2">Hard Copy Stock</label>
+        {existing ? (
           <>
-            <div className="col-md-4">
-              <label className="form-label">Reserved for Subscribers</label>
-              <input type="number" className="form-control" value={existing.printStockReservedSubs} disabled />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Sold</label>
-              <input type="number" className="form-control" value={existing.printStockSold} disabled />
-            </div>
+            <p className="small text-muted mb-2">
+              Total: <strong>{existing.printStockTotal}</strong> · Reserved (subs): <strong>{existing.printStockReservedSubs}</strong> · Sold:{' '}
+              <strong>{existing.printStockSold}</strong> · Available:{' '}
+              <strong>{Math.max(0, existing.printStockTotal - existing.printStockReservedSubs - existing.printStockSold)}</strong>
+            </p>
+            <Link href={`/admin/issues/${existing.id}/stock`} className="btn custom-btn custom-btn-secondary custom-btn-sm">
+              Manage Stock →
+            </Link>
           </>
+        ) : (
+          <p className="small text-muted mb-0">Starts at 0 copies — save this issue first, then add stock from its Manage Stock page.</p>
         )}
       </div>
-      {existing && existing.printStockTotal > 0 && (
-        <p className="text-muted small mb-3">
-          Available to sell: {Math.max(0, existing.printStockTotal - existing.printStockReservedSubs - existing.printStockSold)}
-        </p>
-      )}
 
       <div className="form-check mb-3">
         <input

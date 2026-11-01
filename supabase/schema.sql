@@ -500,6 +500,22 @@ returns void as $$
   update issues set print_stock_reserved_subs = print_stock_reserved_subs + p_amount where id = p_issue_id;
 $$ language sql;
 
+-- Print-run ledger: an issue starts with 0 copies and admins add (or correct, via a
+-- negative entry) stock in batches over time. issues.print_stock_total is a cached
+-- sum of this ledger, kept in sync by lib/db/stock-transactions.ts on every
+-- add/edit/delete — never edited directly, so every purchase/booking check keeps
+-- reading issues.print_stock_total without needing to re-sum the ledger each time.
+create table if not exists issue_stock_transactions (
+  id          uuid primary key default gen_random_uuid(),
+  issue_id    uuid not null references issues(id) on delete cascade,
+  quantity    integer not null check (quantity <> 0),
+  note        text,
+  created_by  uuid references users(id),
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_issue_stock_transactions_issue on issue_stock_transactions (issue_id);
+alter table issue_stock_transactions enable row level security;
+
 -- Entitlements: the single source of truth for "can this user read this issue".
 create table if not exists entitlements (
   id              uuid primary key default gen_random_uuid(),

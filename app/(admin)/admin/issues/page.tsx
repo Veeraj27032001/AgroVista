@@ -57,12 +57,11 @@ export default function AdminIssuesPage() {
       key: 'stock',
       header: 'Hard Copy Stock',
       render: (i) => {
-        if (!i.printStockTotal) return <span className="text-muted">—</span>;
         const available = Math.max(0, i.printStockTotal - i.printStockReservedSubs - i.printStockSold);
         return (
-          <span className={available === 0 ? 'text-danger fw-semibold' : ''}>
-            {available} / {i.printStockTotal} {available === 0 && '(sold out)'}
-          </span>
+          <Link href={`/admin/issues/${i.id}/stock`} className={available === 0 && i.printStockTotal > 0 ? 'text-danger fw-semibold' : ''}>
+            {i.printStockTotal ? `${available} / ${i.printStockTotal}${available === 0 ? ' (sold out)' : ''}` : 'Manage →'}
+          </Link>
         );
       }
     },

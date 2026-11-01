@@ -8,7 +8,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[] | null>(null);
 
   useEffect(() => {
-    fetch('/api/admin/users', { credentials: 'include' })
+    fetch('/api/admin/users?roles=user', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => setUsers(data.users || []));
   }, []);
@@ -18,7 +18,6 @@ export default function AdminUsersPage() {
     { key: 'email', header: 'Email', sortKey: 'email', render: (u) => u.email },
     { key: 'phone', header: 'Phone', render: (u) => u.phone || '—' },
     { key: 'city', header: 'City', render: (u) => u.city || '—' },
-    { key: 'role', header: 'Role', render: (u) => <span className="text-capitalize">{u.role}</span> },
     { key: 'joined', header: 'Joined', render: (u) => new Date(u.createdAt).toLocaleDateString() }
   ];
 

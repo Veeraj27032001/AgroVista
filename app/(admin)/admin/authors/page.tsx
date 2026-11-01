@@ -3,17 +3,22 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { AuthorRequestWithUser } from '@/lib/db/author-requests';
+import type { User } from '@/lib/types';
 import BootstrapTable, { type BsColumn } from '@/components/admin/BootstrapTable';
 import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function AdminAuthorsPage() {
   const [requests, setRequests] = useState<AuthorRequestWithUser[] | null>(null);
+  const [authors, setAuthors] = useState<User[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   function load() {
     fetch('/api/admin/authors', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => setRequests(data.requests || []));
+    fetch('/api/admin/users?roles=author', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => setAuthors(data.users || []));
   }
 
   useEffect(load, []);
@@ -80,11 +85,28 @@ export default function AdminAuthorsPage() {
     }
   ];
 
+  const authorColumns: BsColumn<User>[] = [
+    { key: 'name', header: 'Name', sortKey: 'name', render: (u) => <span className="fw-semibold">{u.name}</span> },
+    { key: 'email', header: 'Email', sortKey: 'email', render: (u) => u.email },
+    { key: 'joined', header: 'Author Since', render: (u) => new Date(u.createdAt).toLocaleDateString() }
+  ];
+
   return (
     <div>
       <h1 className="mb-4" style={{ fontSize: 24 }}>
-        Author Requests
+        Authors
       </h1>
+
+      <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
+        Current Authors
+      </h2>
+      <div className="admin-card mb-4">
+        <BootstrapTable columns={authorColumns} data={authors || []} loading={!authors} searchKeys={['name', 'email']} />
+      </div>
+
+      <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
+        Author Requests
+      </h2>
       <div className="admin-card">
         <BootstrapTable columns={columns} data={requests || []} loading={!requests} searchKeys={['userName', 'userEmail', 'status']} />
       </div>

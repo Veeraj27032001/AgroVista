@@ -68,7 +68,7 @@ async function generateRequestNumber(): Promise<string> {
   const year = new Date().getFullYear();
   const db = getSupabaseAdmin();
   const { count } = await db.from('support_requests').select('*', { count: 'exact', head: true }).like('request_number', `REQ-${year}-%`);
-  return `REQ-${year}-${String((count ?? 0) + 1).padStart(6, '0')}`;
+  return `REQ-${year}-${(count ?? 0) + 1}`;
 }
 
 export async function createSupportRequest(params: {

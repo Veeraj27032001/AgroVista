@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
     softCopyRate: form.get('softCopyRate') ? Number(form.get('softCopyRate')) : undefined,
     hardCopyRate: form.get('hardCopyRate') ? Number(form.get('hardCopyRate')) : undefined,
     bothRate: form.get('bothRate') ? Number(form.get('bothRate')) : undefined,
-    printStockTotal: form.get('printStockTotal') ? Number(form.get('printStockTotal')) : undefined,
     couponApplicable: form.get('couponApplicable') !== 'false',
     status: 'draft'
   });

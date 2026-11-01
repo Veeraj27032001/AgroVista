@@ -51,6 +51,9 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [payoutMethod, setPayoutMethod] = useState<'upi' | 'bank_transfer' | 'other'>('upi');
   const [payoutNote, setPayoutNote] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [editWord, setEditWord] = useState<File | null>(null);
+  const [editPdf, setEditPdf] = useState<File | null>(null);
+  const [uploadingEdit, setUploadingEdit] = useState(false);
 
   function load() {
     fetch(`/api/admin/submissions/${id}`, { credentials: 'include' })
@@ -116,6 +119,28 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     return `/api/admin/submissions/${id}/download?path=${encodeURIComponent(path)}&adminEdit=${isAdminEdit ? '1' : '0'}`;
   }
 
+  async function uploadFinalVersion() {
+    if (!editWord || !editPdf) {
+      toast.error('Attach both a Word file and a PDF file.');
+      return;
+    }
+    setUploadingEdit(true);
+    const form = new FormData();
+    form.set('word', editWord);
+    form.set('pdf', editPdf);
+    const res = await fetch(`/api/admin/submissions/${id}/upload-edit`, { method: 'POST', credentials: 'include', body: form });
+    const data = await res.json();
+    setUploadingEdit(false);
+    if (!res.ok) {
+      toast.error(data.message || 'Could not upload the final version.');
+      return;
+    }
+    toast.success('Final version uploaded.');
+    setEditWord(null);
+    setEditPdf(null);
+    load();
+  }
+
   if (!detail) {
     return (
       <div className="text-center py-5">
@@ -132,6 +157,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     ...coAuthors.map((c) => ({ email: c.email, name: [c.firstName, c.lastName].filter(Boolean).join(' ') }))
   ].filter((r) => r.email);
   const canPayAuthor = isAdmin && ['payment_completed', 'scheduled', 'published'].includes(s.status);
+  const canUploadEdit = ['accepted', 'payment_pending', 'partially_paid', 'payment_completed', 'scheduled', 'published'].includes(s.status);
 
   return (
     <div className="row g-4">

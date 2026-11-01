@@ -154,7 +154,7 @@ async function generateArticleCode(): Promise<string> {
       .select('*', { count: 'exact', head: true })
       .like('article_code', `AGX-${year}-%`);
     const next = (count ?? 0) + 1 + attempt;
-    const code = `AGX-${year}-${String(next).padStart(6, '0')}`;
+    const code = `AGX-${year}-${next}`;
     const { data: existing } = await db.from('article_submissions').select('id').eq('article_code', code).maybeSingle();
     if (!existing) return code;
   }

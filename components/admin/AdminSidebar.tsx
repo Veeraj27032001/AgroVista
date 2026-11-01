@@ -20,7 +20,8 @@ import {
   LifeBuoy,
   Settings,
   Receipt,
-  PenSquare
+  PenSquare,
+  ShieldCheck
 } from 'lucide-react';
 import type { Role } from '@/lib/types';
 
@@ -39,6 +40,7 @@ const LINKS = [
   { href: '/admin/submissions', label: 'Submissions', icon: FileText, adminOnly: false },
   { href: '/admin/authors', label: 'Authors', icon: PenSquare, adminOnly: true },
   { href: '/admin/users', label: 'Users', icon: UserCog, adminOnly: true },
+  { href: '/admin/admin-users', label: 'Admin Users', icon: ShieldCheck, adminOnly: true },
   { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true }
 ];
 

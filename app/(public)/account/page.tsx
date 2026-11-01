@@ -64,6 +64,8 @@ export default function ProfilePage() {
                 <h3>{user.name}</h3>
                 <p>{user.email}</p>
                 {user.role === 'admin' && <span className="badge rounded-pill">Admin</span>}
+                {user.role === 'editor' && <span className="badge rounded-pill">Editor</span>}
+                {user.role === 'author' && <span className="badge rounded-pill">Author</span>}
                 <div className="profile-card-actions">
                   <a href="/account/edit" className="btn custom-btn custom-btn-outline-light custom-btn-sm">
                     <i className="bi bi-pencil me-1"></i>Edit Profile

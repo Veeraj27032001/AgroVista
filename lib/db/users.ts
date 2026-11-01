@@ -14,7 +14,7 @@ type UserRow = {
   taluk_id: string | null;
   city: string | null;
   pincode: string | null;
-  role: 'user' | 'admin';
+  role: Role;
   created_at: string;
 };
 
@@ -46,6 +46,7 @@ export async function createUser(params: {
   talukId?: string;
   city?: string;
   pincode?: string;
+  role?: Role;
 }): Promise<User> {
   const { data, error } = await getSupabaseAdmin()
     .from('users')
@@ -59,12 +60,19 @@ export async function createUser(params: {
       district_id: params.districtId || null,
       taluk_id: params.talukId || null,
       city: params.city || null,
-      pincode: params.pincode || null
+      pincode: params.pincode || null,
+      role: params.role || 'user'
     })
     .select('*')
     .single();
   if (error) throw error;
   return toUser(data as UserRow);
+}
+
+export async function listUsersByRoles(roles: Role[]): Promise<User[]> {
+  const { data, error } = await getSupabaseAdmin().from('users').select('*').in('role', roles).order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data as UserRow[]).map(toUser);
 }
 
 export async function findUserByEmail(email: string): Promise<(User & { passwordHash: string | null }) | null> {

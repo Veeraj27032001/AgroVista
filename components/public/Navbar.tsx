@@ -82,9 +82,14 @@ export default function Navbar() {
                 >
                   <i className="bi bi-person-circle me-1"></i> {session.user?.name}
                 </button>
-                <ul className="dropdown-menu dropdown-menu-end">
+                <ul className="dropdown-menu dropdown-menu-end" style={{ maxHeight: 'calc(100vh - 90px)', overflowY: 'auto' }}>
                   <li className="px-3 py-1">
-                    <div className="small fw-semibold">{session.user?.name}</div>
+                    <div className="small fw-semibold d-flex align-items-center gap-2">
+                      {session.user?.name}
+                      {session.user?.role === 'admin' && <span className="badge rounded-pill text-bg-dark">Admin</span>}
+                      {session.user?.role === 'editor' && <span className="badge rounded-pill text-bg-secondary">Editor</span>}
+                      {session.user?.role === 'author' && <span className="badge rounded-pill text-bg-success">Author</span>}
+                    </div>
                     <div className="small text-muted text-truncate">{session.user?.email}</div>
                   </li>
                   <li>
