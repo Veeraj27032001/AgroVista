@@ -17,7 +17,7 @@ const WORD_TYPES = ['application/msword', 'application/vnd.openxmlformats-office
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 });
-  if (session.role !== 'author' && session.role !== 'admin') {
+  if (session.role !== 'author') {
     return NextResponse.json(
       { error: 'not_author', message: 'You must be an approved Author to submit articles.' },
       { status: 403 }

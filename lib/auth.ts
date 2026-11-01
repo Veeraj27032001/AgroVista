@@ -102,11 +102,11 @@ export async function requireStaffOrRedirect(): Promise<SessionUser> {
   return session as SessionUser;
 }
 
-/** Article submission is gated to approved Authors and Admins — plain users must request Author status first. */
-export async function requireAuthorOrAdminOrRedirect(): Promise<SessionUser> {
+/** Article submission is gated to approved Authors only — everyone else, including Admin, must request Author status first. */
+export async function requireAuthorOrRedirect(): Promise<SessionUser> {
   const { redirect } = await import('next/navigation');
   const session = await getSession();
   if (!session) redirect('/login?redirect=/submit-article');
-  if (session!.role !== 'author' && session!.role !== 'admin') redirect('/become-author');
+  if (session!.role !== 'author') redirect('/become-author');
   return session as SessionUser;
 }

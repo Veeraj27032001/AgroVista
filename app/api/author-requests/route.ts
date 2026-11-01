@@ -13,7 +13,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 });
-  if (session.role === 'author' || session.role === 'admin') {
+  if (session.role === 'author') {
     return NextResponse.json({ error: 'already_author', message: 'You can already submit articles.' }, { status: 400 });
   }
 

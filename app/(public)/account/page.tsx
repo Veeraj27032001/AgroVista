@@ -105,7 +105,7 @@ export default function ProfilePage() {
 
         <div className="row g-3 mt-4">
           {[
-            user.role === 'author' || user.role === 'admin'
+            user.role === 'author'
               ? { href: '/account/submissions', icon: 'bi-journal-text', label: 'My Submissions' }
               : { href: '/become-author', icon: 'bi-pencil-square', label: 'Become an Author' },
             { href: '/account/purchases', icon: 'bi-collection', label: 'My Purchases' },

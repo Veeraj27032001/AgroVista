@@ -4,6 +4,6 @@ import BecomeAuthorForm from './BecomeAuthorForm';
 
 export default async function BecomeAuthorPage() {
   const session = await requireUserOrRedirect();
-  if (session.role === 'author' || session.role === 'admin') redirect('/submit-article');
+  if (session.role === 'author') redirect('/submit-article');
   return <BecomeAuthorForm />;
 }

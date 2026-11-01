@@ -100,7 +100,7 @@ export default function Navbar() {
                       <i className="bi bi-person me-2"></i>Profile
                     </a>
                   </li>
-                  {session.user?.role === 'author' || session.user?.role === 'admin' ? (
+                  {session.user?.role === 'author' ? (
                     <>
                       <li>
                         <a className="dropdown-item" href="/submit-article">

@@ -1,7 +1,7 @@
-import { requireAuthorOrAdminOrRedirect } from '@/lib/auth';
+import { requireAuthorOrRedirect } from '@/lib/auth';
 import SubmitArticleForm from './SubmitArticleForm';
 
 export default async function SubmitArticlePage() {
-  await requireAuthorOrAdminOrRedirect();
+  await requireAuthorOrRedirect();
   return <SubmitArticleForm />;
 }
