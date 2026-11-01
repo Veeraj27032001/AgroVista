@@ -283,7 +283,12 @@ export async function listAllSubmissions(status?: SubmissionStatus): Promise<Art
 export type SubmissionWithUser = ArticleSubmission & { userEmail: string };
 
 export async function listAllSubmissionsWithUser(status?: SubmissionStatus, assignedEditorId?: string): Promise<SubmissionWithUser[]> {
-  let query = getSupabaseAdmin().from('article_submissions').select('*, users(email)').order('created_at', { ascending: false });
+  // Explicit FK hint required: assigned_editor_id also references users(id), so a plain
+  // "users(email)" embed is ambiguous now that there are two FKs to the same table.
+  let query = getSupabaseAdmin()
+    .from('article_submissions')
+    .select('*, users!article_submissions_user_id_fkey(email)')
+    .order('created_at', { ascending: false });
   if (status) query = query.eq('status', status);
   if (assignedEditorId) query = query.eq('assigned_editor_id', assignedEditorId);
   const { data, error } = await query;

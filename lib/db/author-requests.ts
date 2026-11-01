@@ -61,9 +61,11 @@ export async function getLatestAuthorRequestForUser(userId: string): Promise<Aut
 export type AuthorRequestWithUser = AuthorRequest & { userName: string; userEmail: string };
 
 export async function listAuthorRequestsWithUser(): Promise<AuthorRequestWithUser[]> {
+  // Explicit FK hint required: author_requests has two FKs to users (user_id, reviewed_by),
+  // so a plain "users(...)" embed is ambiguous.
   const { data, error } = await getSupabaseAdmin()
     .from('author_requests')
-    .select('*, users(name, email)')
+    .select('*, users!author_requests_user_id_fkey(name, email)')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data as (Row & { users: { name: string; email: string } | null })[]).map((r) => ({
