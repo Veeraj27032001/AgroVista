@@ -93,8 +93,22 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
           <h1 className="mb-0" style={{ fontSize: 22 }}>
             {order.issueTitle}
           </h1>
-          <StatusBadge status={order.orderStatus} />
+          <div className="d-flex gap-2 align-items-center">
+            {order.format === 'both' && (
+              <span className="badge rounded-pill text-bg-success">
+                <i className="bi bi-check-circle-fill me-1"></i>Soft Copy: Available
+              </span>
+            )}
+            <span className="small text-muted">Hard Copy:</span>
+            <StatusBadge status={order.orderStatus} />
+          </div>
         </div>
+
+        {order.format === 'both' && (
+          <p className="small text-muted mb-3">
+            This order includes a soft copy (available for reading immediately — no delivery status) and a hard copy (tracked below).
+          </p>
+        )}
 
         <div className="row g-4">
           <div className="col-md-6">
@@ -113,7 +127,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             </p>
           </div>
           <div className="col-md-6">
-            <p className="small text-muted mb-1">Delivery Address</p>
+            <p className="small text-muted mb-1">Delivery Address (Hard Copy)</p>
             <p className="mb-1">{order.deliveryName}</p>
             <p className="mb-1 text-muted small">{order.deliveryAddress}</p>
             <p className="mb-3 text-muted small">
@@ -124,13 +138,13 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <button type="button" className="btn custom-btn" onClick={openModal}>
-          Update Status
+          Update Hard Copy Status
         </button>
       </div>
 
       <div className="admin-card">
         <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
-          Update History
+          Hard Copy Delivery History
         </h2>
         {history.length === 0 ? (
           <p className="text-muted small">No status changes recorded yet.</p>
@@ -167,7 +181,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
           <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h3 style={{ fontSize: 18 }} className="mb-0">
-                Update Status
+                Update Hard Copy Status
               </h3>
               <button type="button" className="btn-close" onClick={() => setModalOpen(false)}></button>
             </div>

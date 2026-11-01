@@ -41,7 +41,7 @@ export default function AdminOrdersPage() {
     { key: 'issue', header: 'Issue', render: (o) => o.issueTitle },
     { key: 'format', header: 'Format', render: (o) => <span className="text-capitalize">{o.format}</span> },
     { key: 'amount', header: 'Amount', render: (o) => `₹${o.amount}` },
-    { key: 'status', header: 'Status', render: (o) => <StatusBadge status={o.orderStatus} /> },
+    { key: 'status', header: 'Hard Copy Status', render: (o) => <StatusBadge status={o.orderStatus} /> },
     {
       key: 'actions',
       header: '',
