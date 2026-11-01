@@ -8,5 +8,7 @@ export async function GET(req: NextRequest) {
   if (!session || !isStaffRole(session.role)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const status = req.nextUrl.searchParams.get('status') as SubmissionStatus | null;
-  return NextResponse.json({ submissions: await listAllSubmissionsWithUser(status || undefined) });
+  // Editors only see what's been forwarded to them — admin sees everything.
+  const assignedEditorId = session.role === 'editor' ? session.userId : undefined;
+  return NextResponse.json({ submissions: await listAllSubmissionsWithUser(status || undefined, assignedEditorId) });
 }

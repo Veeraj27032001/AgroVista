@@ -282,9 +282,10 @@ export async function listAllSubmissions(status?: SubmissionStatus): Promise<Art
 
 export type SubmissionWithUser = ArticleSubmission & { userEmail: string };
 
-export async function listAllSubmissionsWithUser(status?: SubmissionStatus): Promise<SubmissionWithUser[]> {
+export async function listAllSubmissionsWithUser(status?: SubmissionStatus, assignedEditorId?: string): Promise<SubmissionWithUser[]> {
   let query = getSupabaseAdmin().from('article_submissions').select('*, users(email)').order('created_at', { ascending: false });
   if (status) query = query.eq('status', status);
+  if (assignedEditorId) query = query.eq('assigned_editor_id', assignedEditorId);
   const { data, error } = await query;
   if (error) throw error;
   return (data as (SubmissionRow & { users: { email: string } | null })[]).map((r) => ({ ...toSubmission(r), userEmail: r.users?.email || '' }));

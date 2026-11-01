@@ -12,6 +12,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const submission = await getSubmission(id);
   if (!submission) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  if (session.role === 'editor' && submission.assignedEditorId !== session.userId) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
 
   const [versions, coAuthors, payments, payouts] = await Promise.all([
     listVersionsForSubmission(id),
