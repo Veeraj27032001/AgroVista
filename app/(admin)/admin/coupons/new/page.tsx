@@ -36,40 +36,41 @@ export default function NewCouponPage() {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="admin-card mx-auto" style={{ maxWidth: 520 }}>
+      <form onSubmit={handleSubmit} className="admin-card">
         <h1 className="mb-4" style={{ fontSize: 24 }}>
           New Coupon
         </h1>
-        <div className="mb-3">
-          <label className="form-label">Code</label>
-          <input className="form-control" required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+        <div className="row g-3 mb-3">
+          <div className="col-md-6">
+            <label className="form-label">Code</label>
+            <input className="form-control" required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+          </div>
+          <div className="col-md-3">
+            <label className="form-label">Discount Type</label>
+            <select className="form-select" value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
+              <option value="flat">Flat (₹)</option>
+              <option value="percent">Percent (%)</option>
+            </select>
+          </div>
+          <div className="col-md-3">
+            <label className="form-label">Discount Value</label>
+            <input type="number" className="form-control" required value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
+          </div>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Discount Type</label>
-          <select className="form-select" value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
-            <option value="flat">Flat (₹)</option>
-            <option value="percent">Percent (%)</option>
-          </select>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Discount Value</label>
-          <input type="number" className="form-control" required value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Subscription Usage Type</label>
-          <select className="form-select" value={subscriptionUsageType} onChange={(e) => setSubscriptionUsageType(e.target.value)}>
-            <option value="">Issues only (not for subscriptions)</option>
-            <option value="one_time">One-time</option>
-            <option value="recurring">Recurring (every renewal)</option>
-          </select>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Expiry Date</label>
-          <input type="date" className="form-control" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+        <div className="row g-3 mb-3">
+          <div className="col-md-6">
+            <label className="form-label">Subscription Usage Type</label>
+            <select className="form-select" value={subscriptionUsageType} onChange={(e) => setSubscriptionUsageType(e.target.value)}>
+              <option value="">Issues only (not for subscriptions)</option>
+              <option value="one_time">One-time</option>
+              <option value="recurring">Recurring (every renewal)</option>
+            </select>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Expiry Date</label>
+            <input type="date" className="form-control" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+          </div>
         </div>
 
         <button type="submit" className="btn custom-btn" disabled={busy}>

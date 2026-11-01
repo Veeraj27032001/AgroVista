@@ -63,22 +63,24 @@ export default function AdminAdminUsersPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={addEditor} className="admin-card mb-4" style={{ maxWidth: 480 }}>
+        <form onSubmit={addEditor} className="admin-card mb-4">
           <h2 className="mb-3" style={{ fontSize: 16, fontWeight: 700 }}>
             New Editor Account
           </h2>
-          <div className="mb-3">
-            <label className="form-label">Name</label>
-            <input className="form-control" required value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input className="form-control" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input className="form-control" type="text" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
-            <div className="form-text">At least 8 characters. This will be emailed to the editor.</div>
+          <div className="row g-3 mb-3">
+            <div className="col-md-4">
+              <label className="form-label">Name</label>
+              <input className="form-control" required value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Email</label>
+              <input className="form-control" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Password</label>
+              <input className="form-control" type="text" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+              <div className="form-text">At least 8 characters. Emailed to the editor.</div>
+            </div>
           </div>
           <button type="submit" className="btn custom-btn" disabled={busy}>
             {busy && <span className="btn-spinner"></span>}

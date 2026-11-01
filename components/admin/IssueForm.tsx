@@ -79,7 +79,7 @@ export default function IssueForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="admin-card mx-auto" style={{ maxWidth: 720 }}>
+    <form onSubmit={handleSubmit} className="admin-card">
       <h1 className="mb-4" style={{ fontSize: 24 }}>
         {formTitle}
       </h1>

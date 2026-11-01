@@ -74,7 +74,7 @@ export default function AdminSupportRequestDetailPage({ params }: { params: Prom
   const open = !['resolved', 'rejected', 'closed'].includes(request.status);
 
   return (
-    <div className="admin-card mx-auto" style={{ maxWidth: 600 }}>
+    <div className="admin-card">
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h1 className="mb-0" style={{ fontSize: 22 }}>
           {request.requestNumber}

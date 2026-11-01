@@ -40,39 +40,41 @@ export default function NewPlanPage() {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="admin-card mx-auto" style={{ maxWidth: 480 }}>
+      <form onSubmit={handleSubmit} className="admin-card">
         <h1 className="mb-4" style={{ fontSize: 24 }}>
           New Subscription Plan
         </h1>
 
-        <div className="mb-3">
-          <label className="form-label">Name</label>
-          <input className="form-control" required value={name} onChange={(e) => setName(e.target.value)} />
+        <div className="row g-3 mb-3">
+          <div className="col-md-6">
+            <label className="form-label">Name</label>
+            <input className="form-control" required value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Format</label>
+            <select className="form-select" value={format} onChange={(e) => setFormat(e.target.value)}>
+              <option value="soft">Soft Copy</option>
+              <option value="hard">Hard Copy</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Format</label>
-          <select className="form-select" value={format} onChange={(e) => setFormat(e.target.value)}>
-            <option value="soft">Soft Copy</option>
-            <option value="hard">Hard Copy</option>
-            <option value="both">Both</option>
-          </select>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Duration</label>
-          <select className="form-select" value={durationLabel} onChange={(e) => setDurationLabel(e.target.value)}>
-            {DURATION_LABELS.map((d) => (
-              <option key={d.label} value={d.label}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Price (₹)</label>
-          <input type="number" className="form-control" required value={price} onChange={(e) => setPrice(e.target.value)} />
+        <div className="row g-3 mb-3">
+          <div className="col-md-6">
+            <label className="form-label">Duration</label>
+            <select className="form-select" value={durationLabel} onChange={(e) => setDurationLabel(e.target.value)}>
+              {DURATION_LABELS.map((d) => (
+                <option key={d.label} value={d.label}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Price (₹)</label>
+            <input type="number" className="form-control" required value={price} onChange={(e) => setPrice(e.target.value)} />
+          </div>
         </div>
 
         <div className="form-check mb-3">

@@ -90,12 +90,11 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
   const available = Math.max(0, issue.printStockTotal - issue.printStockReservedSubs - issue.printStockSold);
 
   return (
-    <div className="row g-4">
-      <div className="col-lg-8">
-        <div className="admin-card mb-4">
-          <Link href={`/admin/issues/${id}`} className="small text-muted d-inline-block mb-2">
-            ← Back to {issue.title}
-          </Link>
+    <div>
+      <div className="admin-card mb-4">
+        <Link href={`/admin/issues/${id}`} className="small text-muted d-inline-block mb-2">
+          ← Back to {issue.title}
+        </Link>
           <div className="d-flex align-items-center justify-content-between mb-3">
             <h1 className="mb-0" style={{ fontSize: 22 }}>
               Hard Copy Stock
@@ -173,7 +172,6 @@ export default function IssueStockPage({ params }: { params: Promise<{ id: strin
               </table>
             </div>
           )}
-        </div>
       </div>
 
       {modalOpen && (

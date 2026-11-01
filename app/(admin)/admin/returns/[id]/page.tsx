@@ -55,7 +55,7 @@ export default function AdminReturnDetailPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="admin-card mx-auto" style={{ maxWidth: 520 }}>
+    <div className="admin-card">
       <h1 className="mb-4" style={{ fontSize: 24 }}>
         Return Request
       </h1>
