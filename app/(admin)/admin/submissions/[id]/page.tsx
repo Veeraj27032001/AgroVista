@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { ArticleCoAuthor, ArticleMessage, ArticlePayment, ArticleSubmission, Issue, SubmissionVersion, User } from '@/lib/types';
 import type { AuthorPayout } from '@/lib/db/author-payouts';
+import type { EditorRound } from '@/lib/db/submission-editor-rounds';
 import StatusBadge from '@/components/admin/StatusBadge';
 
 type Detail = {
@@ -12,6 +13,7 @@ type Detail = {
   coAuthors: ArticleCoAuthor[];
   payments: ArticlePayment[];
   payouts: AuthorPayout[];
+  editorRounds: EditorRound[];
 };
 
 function Person({ label, salutation, first, middle, last, email, phone, affiliation, designation, city, state, country }: Record<string, string | null | undefined>) {
@@ -64,6 +66,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [assignRemarks, setAssignRemarks] = useState('');
   const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardRemarks, setForwardRemarks] = useState('');
+  const [overrideModalOpen, setOverrideModalOpen] = useState(false);
 
   function load() {
     fetch(`/api/admin/submissions/${id}`, { credentials: 'include' })
@@ -144,6 +147,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
 
   async function submitForwardToAdmin(e: React.FormEvent) {
     e.preventDefault();
+    let hasAttachment = false;
     if (editWord || editPdf) {
       if (!editWord || !editPdf) {
         toast.error('Attach both a Word file and a PDF file, or neither.');
@@ -162,9 +166,10 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       }
       setEditWord(null);
       setEditPdf(null);
+      hasAttachment = true;
     }
 
-    const ok = await act('forward-to-admin', { remarks: forwardRemarks.trim() });
+    const ok = await act('forward-to-admin', { remarks: forwardRemarks.trim(), hasAttachment });
     if (ok) {
       setForwardRemarks('');
       setForwardModalOpen(false);
@@ -191,7 +196,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     return `/api/admin/submissions/${id}/download?path=${encodeURIComponent(path)}&adminEdit=${isAdminEdit ? '1' : '0'}`;
   }
 
-  async function uploadFinalVersion() {
+  async function uploadFinalVersion(e: React.FormEvent) {
+    e.preventDefault();
     if (!editWord || !editPdf) {
       toast.error('Attach both a Word file and a PDF file.');
       return;
@@ -210,6 +216,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     toast.success('Final version uploaded.');
     setEditWord(null);
     setEditPdf(null);
+    setOverrideModalOpen(false);
     load();
   }
 
@@ -221,7 +228,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     );
   }
 
-  const { submission: s, versions, coAuthors, payments, payouts } = detail;
+  const { submission: s, versions, coAuthors, payments, payouts, editorRounds } = detail;
+  const activeRound = editorRounds.find((r) => r.status === 'pending') || null;
   const inReview = ['submitted', 'under_review', 'resubmitted'].includes(s.status);
   const balance = (s.publicationCharge || 0) - s.amountPaid;
   const recipients = [
@@ -300,37 +308,9 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
 
           {isAdmin && (
             <div className="mt-4 pt-3 border-top">
-              <div className="text-muted small text-uppercase mb-2">Admin Override — Upload Final Version</div>
-              <p className="small text-muted mb-2">
-                Admin-only: upload a final copy directly at any stage — overrides whatever the author or editor were doing.
-              </p>
-              <div className="row g-2 mb-2">
-                <div className="col-md-6">
-                  <label className="form-label small">Word File</label>
-                  <input
-                    type="file"
-                    className="form-control form-control-sm"
-                    accept=".doc,.docx"
-                    onChange={(e) => setEditWord(e.target.files?.[0] || null)}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label small">PDF File</label>
-                  <input
-                    type="file"
-                    className="form-control form-control-sm"
-                    accept=".pdf"
-                    onChange={(e) => setEditPdf(e.target.files?.[0] || null)}
-                  />
-                </div>
-              </div>
-              <button
-                type="button"
-                className="btn custom-btn custom-btn-sm"
-                disabled={uploadingEdit || !editWord || !editPdf}
-                onClick={uploadFinalVersion}
-              >
-                {uploadingEdit && <span className="btn-spinner"></span>}
+              <div className="text-muted small text-uppercase mb-2">Admin Override</div>
+              <p className="small text-muted mb-2">Upload a final copy directly at any stage — overrides whatever the author or editor were doing.</p>
+              <button type="button" className="btn custom-btn custom-btn-sm" onClick={() => setOverrideModalOpen(true)}>
                 Upload Final Version
               </button>
             </div>
@@ -339,28 +319,83 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
           {isAdmin && (
             <div className="mt-4 pt-3 border-top">
               <div className="text-muted small text-uppercase mb-2">Editorial Assignment</div>
-              {s.assignedEditorId ? (
-                <p className="small mb-2">
-                  Assigned to: <strong>{editors.find((e) => e.id === s.assignedEditorId)?.name || 'Editor'}</strong>
-                  {s.editorForwardedAt && <span className="text-success"> — forwarded back {new Date(s.editorForwardedAt).toLocaleString()}</span>}
-                </p>
+              {activeRound ? (
+                <>
+                  <p className="small mb-2">
+                    Forwarded to: <strong>{activeRound.editorName || 'Editor'}</strong>
+                    {activeRound.forwardedAt ? (
+                      <span className="text-success">
+                        {' '}
+                        — forwarded back {new Date(activeRound.forwardedAt).toLocaleString()} ({activeRound.hasAttachment ? 'with file' : 'no file attached'})
+                      </span>
+                    ) : (
+                      <span className="text-muted"> — waiting on editor</span>
+                    )}
+                  </p>
+                  <div className="d-flex gap-2 flex-wrap">
+                    {activeRound.forwardedAt && activeRound.hasAttachment && (
+                      <button
+                        type="button"
+                        className="btn custom-btn custom-btn-sm"
+                        disabled={busy}
+                        onClick={() => act('decide-editor-round', { decision: 'accepted' })}
+                      >
+                        Accept
+                      </button>
+                    )}
+                    {activeRound.forwardedAt && activeRound.hasAttachment && (
+                      <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm" onClick={() => setAssignModalOpen(true)}>
+                        Request Change
+                      </button>
+                    )}
+                    {(!activeRound.forwardedAt || !activeRound.hasAttachment) && (
+                      <button
+                        type="button"
+                        className="btn custom-btn-danger custom-btn-sm"
+                        disabled={busy}
+                        onClick={() => act('decide-editor-round', { decision: 'cancelled' })}
+                      >
+                        {activeRound.forwardedAt ? 'Cancel' : 'Cancel Assignment'}
+                      </button>
+                    )}
+                  </div>
+                </>
               ) : (
-                <p className="small text-muted mb-2">Not yet forwarded to an editor.</p>
-              )}
-              <div className="d-flex gap-2">
-                <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm" onClick={() => setAssignModalOpen(true)}>
-                  {s.assignedEditorId ? 'Re-forward to Editor' : 'Forward to Editor'}
-                </button>
-                {s.assignedEditorId && (
-                  <button type="button" className="btn custom-btn-danger custom-btn-sm" disabled={busy} onClick={() => act('cancel-editor-assignment')}>
-                    Cancel Assignment
+                <>
+                  <p className="small text-muted mb-2">Not currently forwarded to an editor.</p>
+                  <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm" onClick={() => setAssignModalOpen(true)}>
+                    Forward to Editor
                   </button>
-                )}
-              </div>
+                </>
+              )}
+
+              {editorRounds.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-muted small text-uppercase mb-1">History</div>
+                  {editorRounds.map((r) => (
+                    <div key={r.id} className="small border rounded px-2 py-1 mb-1">
+                      <div className="d-flex justify-content-between">
+                        <span>{r.editorName || 'Editor'}</span>
+                        <span
+                          className={`badge rounded-pill ${
+                            r.status === 'accepted' ? 'text-bg-success' : r.status === 'cancelled' ? 'text-bg-secondary' : 'text-bg-warning'
+                          }`}
+                        >
+                          {r.status}
+                        </span>
+                      </div>
+                      <div className="text-muted">
+                        Assigned {new Date(r.assignedAt).toLocaleDateString()}
+                        {r.forwardedAt && ` · forwarded back ${new Date(r.forwardedAt).toLocaleDateString()} (${r.hasAttachment ? 'file attached' : 'no file'})`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {isEditorRole && s.assignedEditorId === myUserId && !s.editorForwardedAt && (
+          {isEditorRole && activeRound?.editorId === myUserId && !activeRound.forwardedAt && (
             <div className="mt-4 pt-3 border-top">
               <div className="text-muted small text-uppercase mb-2">Your Assignment</div>
               <p className="small text-muted mb-2">Attach your edited copy and forward it back to admin.</p>
@@ -714,6 +749,49 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             <button type="submit" className="btn custom-btn" disabled={busy || uploadingEdit}>
               {(busy || uploadingEdit) && <span className="btn-spinner"></span>}
               Forward to Admin
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {overrideModalOpen && (
+      <div
+        className="admin-modal-backdrop"
+        onClick={() => {
+          setOverrideModalOpen(false);
+          setEditWord(null);
+          setEditPdf(null);
+        }}
+      >
+        <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h3 style={{ fontSize: 18 }} className="mb-0">
+              Admin Override — Upload Final Version
+            </h3>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => {
+                setOverrideModalOpen(false);
+                setEditWord(null);
+                setEditPdf(null);
+              }}
+            ></button>
+          </div>
+          <p className="small text-muted mb-3">Overrides whatever the author or editor were doing — works at any stage.</p>
+          <form onSubmit={uploadFinalVersion}>
+            <div className="mb-3">
+              <label className="form-label small">Word File</label>
+              <input type="file" className="form-control form-control-sm" accept=".doc,.docx" required onChange={(e) => setEditWord(e.target.files?.[0] || null)} />
+            </div>
+            <div className="mb-3">
+              <label className="form-label small">PDF File</label>
+              <input type="file" className="form-control form-control-sm" accept=".pdf" required onChange={(e) => setEditPdf(e.target.files?.[0] || null)} />
+            </div>
+            <button type="submit" className="btn custom-btn" disabled={uploadingEdit || !editWord || !editPdf}>
+              {uploadingEdit && <span className="btn-spinner"></span>}
+              Upload Final Version
             </button>
           </form>
         </div>

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { assignEditor, getSubmission } from '@/lib/db/submissions';
+import { getSubmission } from '@/lib/db/submissions';
+import { startEditorRound } from '@/lib/db/submission-editor-rounds';
 import { createMessage } from '@/lib/db/article-messages';
 import { findUserById } from '@/lib/db/users';
 import { notifyEditorAssigned } from '@/lib/article-notifications';
 
-/** POST /api/admin/submissions/[id]/assign-editor  { editorId, remarks } — admin-only hand-off to a specific editor. */
+/** POST /api/admin/submissions/[id]/assign-editor  { editorId, remarks } — admin-only; starts a new round (re-forwarding is just another round). */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session || session.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 });
@@ -23,9 +24,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const editor = await findUserById(editorId);
   if (!editor || editor.role !== 'editor') return NextResponse.json({ error: 'invalid_editor' }, { status: 400 });
 
-  const submission = await assignEditor(id, editorId);
+  const round = await startEditorRound({ submissionId: id, editorId, assignedBy: session.userId, remarks });
   await createMessage(id, 'admin', `Forwarded to editor ${editor.name}: ${remarks}`);
-  await notifyEditorAssigned(editor.email, editor.name, submission.title, remarks);
+  await notifyEditorAssigned(editor.email, editor.name, existing.title, remarks);
 
-  return NextResponse.json({ submission });
+  return NextResponse.json({ round });
 }

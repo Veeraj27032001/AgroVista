@@ -866,8 +866,33 @@ alter table article_submissions add column if not exists withdrawn_at timestampt
 alter table article_submissions add column if not exists withdraw_reason text;
 -- Editor hand-off: who the admin forwarded this submission to, and whether
 -- that editor has since forwarded their finished edit back for admin sign-off.
+-- These two columns always mirror the latest row in submission_editor_rounds
+-- below — kept for the cheap "is this assigned to me" filter on the editor's
+-- own submissions list, without needing to join the rounds table there.
 alter table article_submissions add column if not exists assigned_editor_id uuid references users(id);
 alter table article_submissions add column if not exists editor_forwarded_at timestamptz;
+
+-- One row per forward-to-editor round, so a submission that's bounced between
+-- admin and editor more than once keeps a full history instead of just the
+-- latest state. Whether admin sees an Accept or a Cancel button for a round
+-- that's come back depends on has_attachment: no file attached means there's
+-- nothing to accept, so the only option is to cancel that round.
+create table if not exists submission_editor_rounds (
+  id               uuid primary key default gen_random_uuid(),
+  submission_id    uuid not null references article_submissions(id) on delete cascade,
+  editor_id        uuid not null references users(id),
+  assigned_by      uuid references users(id),
+  assign_remarks   text,
+  assigned_at      timestamptz not null default now(),
+  forwarded_at     timestamptz,
+  forward_remarks  text,
+  has_attachment   boolean not null default false,
+  status           text not null default 'pending' check (status in ('pending', 'accepted', 'cancelled')),
+  decided_at       timestamptz,
+  decided_by       uuid references users(id)
+);
+create index if not exists idx_submission_editor_rounds_submission on submission_editor_rounds (submission_id);
+alter table submission_editor_rounds enable row level security;
 
 -- Merges primary author + co-authors into one table (is_primary distinguishes
 -- them), per spec §3.10. The existing author_* columns on article_submissions

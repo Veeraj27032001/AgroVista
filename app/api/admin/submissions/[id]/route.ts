@@ -3,6 +3,7 @@ import { getSession, isStaffRole } from '@/lib/auth';
 import { getSubmission, listCoAuthors, listVersionsForSubmission } from '@/lib/db/submissions';
 import { listPaymentsForSubmission } from '@/lib/db/article-payments';
 import { listPayoutsForSubmission } from '@/lib/db/author-payouts';
+import { listEditorRounds } from '@/lib/db/submission-editor-rounds';
 
 /** Detail view for the admin Submission Detail page: submission + version history + co-authors + payment/payout ledgers. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,11 +17,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  const [versions, coAuthors, payments, payouts] = await Promise.all([
+  const [versions, coAuthors, payments, payouts, editorRounds] = await Promise.all([
     listVersionsForSubmission(id),
     listCoAuthors(id),
     listPaymentsForSubmission(id),
-    listPayoutsForSubmission(id)
+    listPayoutsForSubmission(id),
+    listEditorRounds(id)
   ]);
-  return NextResponse.json({ submission, versions, coAuthors, payments, payouts });
+  return NextResponse.json({ submission, versions, coAuthors, payments, payouts, editorRounds });
 }
