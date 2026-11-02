@@ -229,7 +229,6 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     ...coAuthors.map((c) => ({ email: c.email, name: [c.firstName, c.lastName].filter(Boolean).join(' ') }))
   ].filter((r) => r.email);
   const canPayAuthor = isAdmin && ['payment_completed', 'scheduled', 'published'].includes(s.status);
-  const canUploadEdit = ['accepted', 'payment_pending', 'partially_paid', 'payment_completed', 'scheduled', 'published'].includes(s.status);
 
   return (
     <>
@@ -299,9 +298,12 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             ))}
           </div>
 
-          {canUploadEdit && isAdmin && (
+          {isAdmin && (
             <div className="mt-4 pt-3 border-top">
-              <div className="text-muted small text-uppercase mb-2">Upload Final Version</div>
+              <div className="text-muted small text-uppercase mb-2">Admin Override — Upload Final Version</div>
+              <p className="small text-muted mb-2">
+                Admin-only: upload a final copy directly at any stage — overrides whatever the author or editor were doing.
+              </p>
               <div className="row g-2 mb-2">
                 <div className="col-md-6">
                   <label className="form-label small">Word File</label>
@@ -345,9 +347,16 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               ) : (
                 <p className="small text-muted mb-2">Not yet forwarded to an editor.</p>
               )}
-              <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm" onClick={() => setAssignModalOpen(true)}>
-                {s.assignedEditorId ? 'Re-forward to Editor' : 'Forward to Editor'}
-              </button>
+              <div className="d-flex gap-2">
+                <button type="button" className="btn custom-btn custom-btn-secondary custom-btn-sm" onClick={() => setAssignModalOpen(true)}>
+                  {s.assignedEditorId ? 'Re-forward to Editor' : 'Forward to Editor'}
+                </button>
+                {s.assignedEditorId && (
+                  <button type="button" className="btn custom-btn-danger custom-btn-sm" disabled={busy} onClick={() => act('cancel-editor-assignment')}>
+                    Cancel Assignment
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

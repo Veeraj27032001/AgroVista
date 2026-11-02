@@ -463,6 +463,18 @@ export async function assignEditor(id: string, editorId: string): Promise<Articl
   return toSubmission(data as SubmissionRow);
 }
 
+/** Admin override — clears a stuck/no-longer-needed editor hand-off so admin can take over directly. */
+export async function clearEditorAssignment(id: string): Promise<ArticleSubmission> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('article_submissions')
+    .update({ assigned_editor_id: null, editor_forwarded_at: null, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return toSubmission(data as SubmissionRow);
+}
+
 /** Editor signals their edit is finished and ready for the admin to review again. */
 export async function forwardToAdmin(id: string): Promise<ArticleSubmission> {
   const { data, error } = await getSupabaseAdmin()
