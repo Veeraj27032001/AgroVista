@@ -13,7 +13,8 @@
     "seed:admin": "node --env-file=.env.local scripts/seed-admin.mjs",
     "seed:legacy-issues": "node --env-file=.env.local scripts/seed-legacy-issues.mjs",
     "backfill:entitlements": "node --env-file=.env.local scripts/backfill-entitlements.mjs",
-    "seed:settings": "node --env-file=.env.local scripts/seed-settings.mjs"
+    "seed:settings": "node --env-file=.env.local scripts/seed-settings.mjs",
+    "renumber:codes": "node --env-file=.env.local scripts/renumber-codes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

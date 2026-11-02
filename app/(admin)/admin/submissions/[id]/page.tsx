@@ -62,6 +62,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [assignEditorId, setAssignEditorId] = useState('');
   const [assignRemarks, setAssignRemarks] = useState('');
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardRemarks, setForwardRemarks] = useState('');
 
   function load() {
@@ -141,9 +142,33 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     }
   }
 
-  async function submitForwardToAdmin() {
+  async function submitForwardToAdmin(e: React.FormEvent) {
+    e.preventDefault();
+    if (editWord || editPdf) {
+      if (!editWord || !editPdf) {
+        toast.error('Attach both a Word file and a PDF file, or neither.');
+        return;
+      }
+      setUploadingEdit(true);
+      const form = new FormData();
+      form.set('word', editWord);
+      form.set('pdf', editPdf);
+      const res = await fetch(`/api/admin/submissions/${id}/upload-edit`, { method: 'POST', credentials: 'include', body: form });
+      const data = await res.json();
+      setUploadingEdit(false);
+      if (!res.ok) {
+        toast.error(data.message || 'Could not upload the final version.');
+        return;
+      }
+      setEditWord(null);
+      setEditPdf(null);
+    }
+
     const ok = await act('forward-to-admin', { remarks: forwardRemarks.trim() });
-    if (ok) setForwardRemarks('');
+    if (ok) {
+      setForwardRemarks('');
+      setForwardModalOpen(false);
+    }
   }
 
   async function recordPayout() {
@@ -274,7 +299,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             ))}
           </div>
 
-          {canUploadEdit && (isAdmin || isEditorRole) && (
+          {canUploadEdit && isAdmin && (
             <div className="mt-4 pt-3 border-top">
               <div className="text-muted small text-uppercase mb-2">Upload Final Version</div>
               <div className="row g-2 mb-2">
@@ -329,9 +354,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
           {isEditorRole && s.assignedEditorId === myUserId && !s.editorForwardedAt && (
             <div className="mt-4 pt-3 border-top">
               <div className="text-muted small text-uppercase mb-2">Your Assignment</div>
-              <label className="form-label small">Remarks for admin (optional)</label>
-              <input className="form-control form-control-sm mb-2" value={forwardRemarks} onChange={(e) => setForwardRemarks(e.target.value)} />
-              <button type="button" className="btn custom-btn custom-btn-sm" disabled={busy} onClick={submitForwardToAdmin}>
+              <p className="small text-muted mb-2">Attach your edited copy and forward it back to admin.</p>
+              <button type="button" className="btn custom-btn custom-btn-sm" onClick={() => setForwardModalOpen(true)}>
                 Forward to Admin
               </button>
             </div>
@@ -632,6 +656,55 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             <button type="submit" className="btn custom-btn" disabled={busy || !assignEditorId || !assignRemarks.trim()}>
               {busy && <span className="btn-spinner"></span>}
               Forward
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {forwardModalOpen && (
+      <div
+        className="admin-modal-backdrop"
+        onClick={() => {
+          setForwardModalOpen(false);
+          setEditWord(null);
+          setEditPdf(null);
+        }}
+      >
+        <div className="admin-card" style={{ maxWidth: 480, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h3 style={{ fontSize: 18 }} className="mb-0">
+              Forward to Admin
+            </h3>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => {
+                setForwardModalOpen(false);
+                setEditWord(null);
+                setEditPdf(null);
+              }}
+            ></button>
+          </div>
+          <form onSubmit={submitForwardToAdmin}>
+            <p className="small text-muted mb-3">Attach your edited copy (optional if you already uploaded one).</p>
+            <div className="row g-2 mb-3">
+              <div className="col-md-6">
+                <label className="form-label small">Word File</label>
+                <input type="file" className="form-control form-control-sm" accept=".doc,.docx" onChange={(e) => setEditWord(e.target.files?.[0] || null)} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label small">PDF File</label>
+                <input type="file" className="form-control form-control-sm" accept=".pdf" onChange={(e) => setEditPdf(e.target.files?.[0] || null)} />
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Remarks for admin (optional)</label>
+              <textarea className="form-control" rows={3} autoFocus value={forwardRemarks} onChange={(e) => setForwardRemarks(e.target.value)} />
+            </div>
+            <button type="submit" className="btn custom-btn" disabled={busy || uploadingEdit}>
+              {(busy || uploadingEdit) && <span className="btn-spinner"></span>}
+              Forward to Admin
             </button>
           </form>
         </div>
